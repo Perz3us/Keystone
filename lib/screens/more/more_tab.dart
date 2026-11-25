@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yet_another_luci_app/screens/network/network_screen.dart';
 import 'package:yet_another_luci_app/design/keystone_tokens.dart';
@@ -274,18 +277,93 @@ Future<void> checkForUpdate(BuildContext context) async {
     return;
   }
   final update = u;
+  final apk = canSelfUpdate
+      ? pickApk(update.apks, await deviceAbis().catchError((_) => <String>[]))
+      : null;
+  if (!context.mounted) return;
   final get = await ksConfirm(
     context,
     title: 'Keystone ${update.version} is out',
     body: [
       if (update.notes case final n? when n.isNotEmpty)
         n.length > 400 ? '${n.substring(0, 400)}…' : n,
-      'Download the APK from the release page and install it over this one. '
-          'Your routers and settings stay.',
+      apk != null
+          ? 'Keystone downloads it and Android asks you to install it. '
+                'Your routers and settings stay.'
+          : 'Download the APK from the release page and install it over this '
+                'one. Your routers and settings stay.',
     ].join('\n\n'),
-    action: 'Open the release',
+    action: apk != null ? 'Download and install' : 'Open the release',
   );
-  if (get) {
+  if (!get || !context.mounted) return;
+  if (apk == null || !await _downloadAndInstall(context, apk)) {
     await launchUrlString(update.url, mode: LaunchMode.externalApplication);
+  }
+}
+
+/// False when it failed and the release page should open instead.
+Future<bool> _downloadAndInstall(BuildContext context, UpdateApk apk) async {
+  final progress = ValueNotifier<double>(0);
+  var cancelled = false;
+  final ks = context.ks;
+  final nav = Navigator.of(context);
+  unawaited(
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => AlertDialog(
+        backgroundColor: ks.sheet,
+        title: Text('Downloading', style: KeystoneType.sheetTitle(ks.tx)),
+        content: ValueListenableBuilder<double>(
+          valueListenable: progress,
+          builder: (_, p, _) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LinearProgressIndicator(value: p > 0 ? p : null),
+              const SizedBox(height: 12),
+              Text(
+                '${(p * apk.size / 1048576).toStringAsFixed(1)} of '
+                '${(apk.size / 1048576).toStringAsFixed(1)} MB',
+                style: KeystoneType.body(ks.tx2),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              cancelled = true;
+              Navigator.pop(c);
+            },
+            child: Text('Cancel', style: KeystoneType.body(ks.tx)),
+          ),
+        ],
+      ),
+    ),
+  );
+  try {
+    final file = await downloadApk(
+      apk,
+      (p) => progress.value = p,
+      () => cancelled,
+    );
+    if (cancelled || file == null) return true;
+    nav.pop();
+    await installApk(file, apk.sha256);
+    return true;
+  } catch (e) {
+    if (!cancelled) nav.pop();
+    if (context.mounted) {
+      ksSay(
+        context,
+        e is PlatformException && e.code == 'BAD_HASH'
+            ? 'The download was damaged. Opening the release page instead.'
+            : "Couldn't download the update. Opening the release page instead.",
+      );
+    }
+    return false;
+  } finally {
+    progress.dispose();
   }
 }

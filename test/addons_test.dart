@@ -73,6 +73,19 @@ void main() {
     addonUpdates.value = null;
   });
 
+  test('app update picks the APK for the phone, else the universal one', () {
+    UpdateApk a(String abi) => UpdateApk(
+      name: 'keystone-v1.0.2-$abi.apk',
+      url: 'https://x/$abi',
+      size: 1,
+    );
+    final all = [a('armeabi-v7a'), a('arm64-v8a'), a('universal')];
+    expect(pickApk(all, ['arm64-v8a', 'armeabi-v7a'])!.name, contains('arm64'));
+    expect(pickApk(all, ['armeabi-v7a'])!.name, contains('armeabi-v7a'));
+    expect(pickApk(all, ['riscv64'])!.name, contains('universal'));
+    expect(pickApk([a('x86_64')], ['arm64-v8a']), isNull);
+  });
+
   test('test versions sort below their stable version', () {
     expect(isNewerVersion('0.3.0', '0.3.0_beta1'), isTrue);
     expect(isNewerVersion('0.3.0_beta1', '0.3.0'), isFalse);

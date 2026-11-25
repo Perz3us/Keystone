@@ -76,6 +76,8 @@ class MainActivity : FlutterFragmentActivity() {
                     playTone(call.argument<Double>("hz") ?: 440.0, call.argument<Int>("ms") ?: 150)
                     result.success(null)
                 }
+                "abis" -> result.success(Build.SUPPORTED_ABIS.toList())
+                "installApk" -> installApk(call.argument<String>("path")!!, call.argument<String>("sha256"), result)
                 else -> result.notImplemented()
             }
         }
@@ -114,6 +116,47 @@ class MainActivity : FlutterFragmentActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    // Only the community flavor declares the provider and install permission;
+    // elsewhere getUriForFile throws and the app falls back to the release page.
+    private fun installApk(path: String, sha256: String?, result: MethodChannel.Result) {
+        Thread {
+            try {
+                val file = java.io.File(path)
+                if (sha256 != null) {
+                    val digest = java.security.MessageDigest.getInstance("SHA-256")
+                    file.inputStream().use { input ->
+                        val buf = ByteArray(1 shl 16)
+                        while (true) {
+                            val n = input.read(buf)
+                            if (n < 0) break
+                            digest.update(buf, 0, n)
+                        }
+                    }
+                    val got = digest.digest().joinToString("") { "%02x".format(it) }
+                    if (!got.equals(sha256, ignoreCase = true)) {
+                        file.delete()
+                        runOnUiThread { result.error("BAD_HASH", "The download is damaged", null) }
+                        return@Thread
+                    }
+                }
+                val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.updates", file)
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+                    .setDataAndType(uri, "application/vnd.android.package-archive")
+                    .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                runOnUiThread {
+                    try {
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("INSTALL_ERROR", e.message, null)
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread { result.error("INSTALL_ERROR", e.message, null) }
+            }
+        }.start()
     }
 
     private var tonePlaying = false

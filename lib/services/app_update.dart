@@ -1,20 +1,102 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 @immutable
 class AppUpdate {
-  const AppUpdate({required this.version, required this.url, this.notes});
+  const AppUpdate({
+    required this.version,
+    required this.url,
+    this.notes,
+    this.apks = const [],
+  });
   final String version;
 
   final String url;
   final String? notes;
+  final List<UpdateApk> apks;
 }
+
+@immutable
+class UpdateApk {
+  const UpdateApk({
+    required this.name,
+    required this.url,
+    required this.size,
+    this.sha256,
+  });
+  final String name;
+  final String url;
+  final int size;
+  final String? sha256;
+}
+
+// Only the GitHub (community) build installs its own updates; a Play build
+// must update through Play.
+bool get canSelfUpdate =>
+    !kIsWeb && Platform.isAndroid && appFlavor == 'community';
+
+/// The APK built for the phone's preferred ABI, else the universal one.
+UpdateApk? pickApk(List<UpdateApk> apks, List<String> abis) {
+  for (final abi in [...abis, 'universal']) {
+    for (final a in apks) {
+      if (a.name.endsWith('-$abi.apk')) return a;
+    }
+  }
+  return null;
+}
+
+const _channel = MethodChannel('com.perz3us.keystone/app_lifecycle');
+
+Future<List<String>> deviceAbis() async =>
+    (await _channel.invokeListMethod<String>('abis')) ?? const [];
+
+/// Streams the APK into the cache, reporting 0..1 progress. Returns null if
+/// [cancelled] turned true.
+Future<File?> downloadApk(
+  UpdateApk apk,
+  void Function(double) onProgress,
+  bool Function() cancelled,
+) async {
+  final dir = Directory('${(await getTemporaryDirectory()).path}/updates');
+  if (dir.existsSync()) dir.deleteSync(recursive: true);
+  dir.createSync(recursive: true);
+  final file = File('${dir.path}/${apk.name}');
+  final client = http.Client();
+  try {
+    final res = await client.send(http.Request('GET', Uri.parse(apk.url)));
+    if (res.statusCode != 200) throw 'GitHub answered ${res.statusCode}';
+    final total = res.contentLength ?? apk.size;
+    final sink = file.openWrite();
+    var got = 0;
+    try {
+      await for (final chunk in res.stream) {
+        if (cancelled()) return null;
+        sink.add(chunk);
+        got += chunk.length;
+        if (total > 0) onProgress(got / total);
+      }
+    } finally {
+      await sink.close();
+    }
+    if (apk.size > 0 && got != apk.size) throw 'The download was cut short';
+    return file;
+  } finally {
+    client.close();
+  }
+}
+
+/// Opens Android's installer. The SHA-256 GitHub publishes is checked first.
+Future<void> installApk(File file, String? sha256) =>
+    _channel.invokeMethod('installApk', {'path': file.path, 'sha256': sha256});
 
 bool isNewerVersion(String latest, String current) {
   List<int> parts(String v) => v
@@ -71,6 +153,18 @@ class AppUpdateChecker {
                 j['html_url']?.toString() ??
                 'https://github.com/Perz3us/Keystone/releases/latest',
             notes: (j['body'] as String?)?.trim(),
+            apks: [
+              for (final a in (j['assets'] as List? ?? const []))
+                if (a is Map && '${a['name']}'.endsWith('.apk'))
+                  UpdateApk(
+                    name: '${a['name']}',
+                    url: '${a['browser_download_url']}',
+                    size: (a['size'] as num?)?.toInt() ?? 0,
+                    sha256: '${a['digest'] ?? ''}'.startsWith('sha256:')
+                        ? '${a['digest']}'.substring(7)
+                        : null,
+                  ),
+            ],
           )
         : null;
   }

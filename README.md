@@ -184,6 +184,16 @@ Stock vendor firmware isn't supported, because it doesn't have the LuCI login Ke
 They're all the same app with the same signature, so you can switch from one to another later
 and keep your settings.
 
+### Updating
+
+Keystone checks GitHub once a day. When a new version is out, **More → Check for updates**
+shows it. Tap **Download and install**: Keystone picks the right APK for your phone, checks it
+against the checksum on the release, and Android asks you to install it. The first time, Android
+asks you to allow installs from Keystone. Your routers and settings stay.
+
+Only the APKs from GitHub update themselves. Apps like [Obtainium](https://github.com/ImranR98/Obtainium)
+work too.
+
 To look around without a router, hold the Keystone logo on the sign-in screen for five
 seconds. That opens a demo with made-up devices.
 

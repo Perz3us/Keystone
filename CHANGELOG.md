@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2
+
+- Updates now download and install from inside the app: Keystone picks the APK for your phone, checks it against the release checksum and hands it to Android to install
+- If the download fails, it opens the release page like before
+
 ## 1.0.1
 
 - Pause now cuts a device off completely, including connections it already had open, and also works when the router runs a proxy such as Passwall
