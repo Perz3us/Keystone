@@ -270,8 +270,14 @@ void main() {
       expect(s, contains("grep -i '20:47:DA:56:00:B7'"));
       expect(s, contains('/tmp/dhcp.leases'));
       expect(s, contains('hook prerouting priority -300'));
-      expect(s, contains('firewall.keystone_block.path=/etc/keystone/block.fw'));
-      expect(s.indexOf('cat > /etc/keystone/block.fw'), lessThan(s.indexOf('reload')));
+      expect(
+        s,
+        contains('firewall.keystone_block.path=/etc/keystone/block.fw'),
+      );
+      expect(
+        s.indexOf('cat > /etc/keystone/block.fw'),
+        lessThan(s.indexOf('reload')),
+      );
       final reload = s.indexOf('/etc/init.d/firewall reload');
       expect(reload, greaterThanOrEqualTo(0));
       expect(s.indexOf('conntrack -D'), greaterThan(reload));
