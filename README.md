@@ -10,10 +10,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Perz3us/Keystone/releases/latest"><img src="https://img.shields.io/github/v/release/Perz3us/Keystone?style=for-the-badge&logo=github&label=Release&color=276ED2" alt="Latest release"></a>
-  <a href="https://github.com/Perz3us/Keystone/releases"><img src="https://img.shields.io/github/downloads/Perz3us/Keystone/total?style=for-the-badge&label=Downloads&color=276ED2" alt="Total downloads"></a>
+  <a href="https://github.com/Perz3us/Keystone/releases/latest"><img src="https://img.shields.io/github/v/release/Perz3us/Keystone?style=for-the-badge&label=Release&color=276ED2" alt="Latest release"></a>
+  <a href="https://github.com/Perz3us/Keystone/releases"><img src="https://img.shields.io/github/downloads/Perz3us/Keystone/total?style=for-the-badge&label=Downloads&color=276ED2&cacheSeconds=1800" alt="Total downloads"></a>
+  <a href="https://github.com/Perz3us/Keystone/stargazers"><img src="https://img.shields.io/github/stars/Perz3us/Keystone?style=for-the-badge&label=Stars&color=276ED2&cacheSeconds=1800" alt="Stars"></a>
   <a href="https://github.com/Perz3us/Keystone/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Perz3us/Keystone/ci.yml?branch=main&style=for-the-badge&label=Tests" alt="Test status"></a>
-  <a href="https://github.com/Perz3us/Keystone/stargazers"><img src="https://img.shields.io/github/stars/Perz3us/Keystone?style=for-the-badge&label=Stars&color=276ED2" alt="Stars"></a>
   <br>
   <a href="#what-you-need"><img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android 8.0 or newer"></a>
   <a href="#what-you-need"><img src="https://img.shields.io/badge/OpenWrt-LuCI-00B5E2?style=for-the-badge&logo=openwrt&logoColor=white" alt="OpenWrt with LuCI"></a>
