@@ -58,19 +58,37 @@ class RealApiService implements IApiService {
   Future<String?> Function(String ipAddress, bool useHttps)? onSessionRenew;
   Future<String?>? _activeRenewalFuture;
 
-  Future<String?> _performSessionRenewal(String ipAddress, bool useHttps) {
-    if (_activeRenewalFuture != null) {
-      return _activeRenewalFuture!;
-    }
+  // Multi-step ops (set -> apply) hold the token they started with; after a
+  // renewal every later step must reuse the new session, or its staged UCI
+  // changes are left behind in the old one.
+  final Map<String, String> _renewedTokens = {};
+
+  @visibleForTesting
+  void rememberRenewedToken(String oldToken, String newToken) {
+    if (oldToken.isEmpty || newToken == oldToken) return;
+    _renewedTokens.updateAll((_, v) => v == oldToken ? newToken : v);
+    _renewedTokens[oldToken] = newToken;
+  }
+
+  @visibleForTesting
+  String currentToken(String token) => _renewedTokens[token] ?? token;
+
+  Future<String?> _performSessionRenewal(
+    String ipAddress,
+    bool useHttps,
+    String oldToken,
+  ) async {
     final handler = onSessionRenew;
-    if (handler == null) {
-      return Future.value(null);
+    if (handler == null) return null;
+    final future = _activeRenewalFuture ??= handler(
+      ipAddress,
+      useHttps,
+    ).whenComplete(() => _activeRenewalFuture = null);
+    final newToken = await future;
+    if (newToken != null && newToken.isNotEmpty) {
+      rememberRenewedToken(oldToken, newToken);
     }
-    final future = handler(ipAddress, useHttps);
-    _activeRenewalFuture = future;
-    return future.whenComplete(() {
-      _activeRenewalFuture = null;
-    });
+    return newToken;
   }
 
   static Map<String, dynamic> fileExecParams(
@@ -479,6 +497,7 @@ class RealApiService implements IApiService {
     BuildContext? context,
     bool isRetry = false,
   }) async {
+    sysauth = currentToken(sysauth);
     final client = _createHttpClient(useHttps, ipAddress, context: context);
     final rpcPayload = {
       'jsonrpc': '2.0',
@@ -546,6 +565,7 @@ class RealApiService implements IApiService {
               final newToken = await _performSessionRenewal(
                 ipAddress,
                 useHttps,
+                sysauth,
               );
               if (newToken != null && newToken.isNotEmpty) {
                 Logger.info(
@@ -584,7 +604,11 @@ class RealApiService implements IApiService {
             'Detected HTTP ${response.statusCode} on RPC $object.$method. Attempting transparent renewal...',
           );
           try {
-            final newToken = await _performSessionRenewal(ipAddress, useHttps);
+            final newToken = await _performSessionRenewal(
+              ipAddress,
+              useHttps,
+              sysauth,
+            );
             if (newToken != null && newToken.isNotEmpty) {
               Logger.info(
                 'Transparent session renewal succeeded. Retrying RPC $object.$method...',
@@ -1914,15 +1938,11 @@ class RealApiService implements IApiService {
         params: {'rollback': false},
         context: mCtx,
       );
-      if (applyRes is List && applyRes.isNotEmpty && applyRes[0] == 0) {
-        await callWithContext(
-          ipAddress,
-          sysauth,
-          useHttps,
-          object: 'uci',
-          method: 'confirm',
-          context: mCtx,
-        );
+      // 5 = nothing left to apply. No confirm: rollback is off, and the Wi-Fi
+      // reload often drops this phone's link, so a confirm call would throw.
+      if (applyRes is List &&
+          applyRes.isNotEmpty &&
+          (applyRes[0] == 0 || applyRes[0] == 5)) {
         return true;
       }
 
@@ -2066,15 +2086,11 @@ class RealApiService implements IApiService {
         params: {'rollback': false},
         context: mCtx,
       );
-      if (applyRes is List && applyRes.isNotEmpty && applyRes[0] == 0) {
-        await callWithContext(
-          ipAddress,
-          sysauth,
-          useHttps,
-          object: 'uci',
-          method: 'confirm',
-          context: mCtx,
-        );
+      // 5 = nothing left to apply. No confirm: rollback is off, and the Wi-Fi
+      // reload often drops this phone's link, so a confirm call would throw.
+      if (applyRes is List &&
+          applyRes.isNotEmpty &&
+          (applyRes[0] == 0 || applyRes[0] == 5)) {
         return true;
       }
 
@@ -4126,15 +4142,11 @@ uci commit dhcp
         params: {'rollback': false},
         context: mCtx,
       );
-      if (applyRes is List && applyRes.isNotEmpty && applyRes[0] == 0) {
-        await callWithContext(
-          ipAddress,
-          sysauth,
-          useHttps,
-          object: 'uci',
-          method: 'confirm',
-          context: mCtx,
-        );
+      // 5 = nothing left to apply. No confirm: rollback is off, and the Wi-Fi
+      // reload often drops this phone's link, so a confirm call would throw.
+      if (applyRes is List &&
+          applyRes.isNotEmpty &&
+          (applyRes[0] == 0 || applyRes[0] == 5)) {
         return true;
       }
 
@@ -6945,6 +6957,68 @@ exit 0
     return ports;
   }
 
+  // Firewall include, rebuilt from the UCI block rules on every firewall load.
+  // Drops blocked devices at prerouting, before conntrack and before
+  // transparent proxies (PassWall2 and the like, which TPROXY LAN traffic to
+  // a local socket so it never reaches the forward chain). Traffic to the
+  // router itself (DHCP, DNS, UI) still passes.
+  @visibleForTesting
+  static const String blockHookScript = r'''
+# Keystone: block paused devices ahead of proxies and established flows.
+NFT=
+if nft list table inet fw4 >/dev/null 2>&1; then
+  nft add chain inet fw4 keystone_block '{ type filter hook prerouting priority -300; policy accept; }'
+  nft flush chain inet fw4 keystone_block
+  NFT=1
+fi
+for sec in $(uci -q show firewall | grep -E "\.name='?(Keystone_Block_|Yala_Block_|Pause_Internet_|nointernet_wireless_clients)" | cut -d. -f2); do
+  [ "$(uci -q get firewall.$sec.enabled)" = "0" ] && continue
+  FAM=$(uci -q get firewall.$sec.family)
+  for m in $(uci -q get firewall.$sec.src_mac); do
+    if [ -n "$NFT" ]; then
+      case "$FAM" in ipv4) P="meta nfproto ipv4";; ipv6) P="meta nfproto ipv6";; *) P="";; esac
+      nft add rule inet fw4 keystone_block ether saddr "$m" $P fib daddr type != '{ local, broadcast, multicast }' counter drop
+    else
+      # shortcut: fw3 path removes stale entries only for MACs still listed; full flush needs fw3 raw ownership.
+      for ipt in iptables ip6tables; do
+        [ "$FAM" = ipv4 ] && [ $ipt = ip6tables ] && continue
+        [ "$FAM" = ipv6 ] && [ $ipt = iptables ] && continue
+        R="PREROUTING -m mac --mac-source $m -m addrtype ! --dst-type LOCAL -m addrtype ! --dst-type BROADCAST -m addrtype ! --dst-type MULTICAST -j DROP"
+        while $ipt -t raw -D $R 2>/dev/null; do :; done
+        $ipt -t raw -I $R 2>/dev/null
+      done
+    fi
+  done
+done
+true
+''';
+
+  @visibleForTesting
+  static String blockFlushScript(String mac) {
+    final m = shellSingleQuote(mac);
+    return '''
+mkdir -p /etc/keystone
+cat > /etc/keystone/block.fw <<'KS_EOF'
+$blockHookScript
+KS_EOF
+uci -q get firewall.keystone_block >/dev/null || {
+  uci set firewall.keystone_block=include
+  uci set firewall.keystone_block.type=script
+  uci set firewall.keystone_block.path=/etc/keystone/block.fw
+  uci set firewall.keystone_block.fw4_compatible=1
+  uci set firewall.keystone_block.reload=1
+  uci commit firewall
+}
+/etc/init.d/firewall reload >/dev/null 2>&1
+command -v conntrack >/dev/null 2>&1 || exit 0
+for ip in \$( (ip neigh show; awk '{print \$3, \$2}' /tmp/dhcp.leases) 2>/dev/null | grep -i $m | awk '{print \$1}' | sort -u); do
+  conntrack -D -s "\$ip" >/dev/null 2>&1
+  conntrack -D -d "\$ip" >/dev/null 2>&1
+done
+exit 0
+''';
+  }
+
   @override
   Future<bool> applyPerDeviceNetworkAccessPolicy(
     String ipAddress,
@@ -7166,17 +7240,40 @@ exit 0
             return false;
           }
 
-          try {
-            await callWithContext(
-              ipAddress,
-              sysauth,
-              useHttps,
-              object: 'rc',
-              method: 'init',
-              params: {'name': 'firewall', 'action': 'reload'},
-              context: mCtx,
-            );
-          } catch (_) {}
+          var flushed = false;
+          if (policy.isEffectivelyBlocked) {
+            // The firewall accepts established flows before any rule, so a new
+            // block only stops new connections. Reload first, then drop the
+            // device's tracked flows so its next packets hit the block.
+            try {
+              final res = await callWithContext(
+                ipAddress,
+                sysauth,
+                useHttps,
+                object: 'file',
+                method: 'exec',
+                params: fileExecParams('/bin/sh', [
+                  '-c',
+                  blockFlushScript(policy.targetMac),
+                ]),
+                context: mCtx,
+              );
+              flushed = _execSucceeded(res);
+            } catch (_) {}
+          }
+          if (!flushed) {
+            try {
+              await callWithContext(
+                ipAddress,
+                sysauth,
+                useHttps,
+                object: 'rc',
+                method: 'init',
+                params: {'name': 'firewall', 'action': 'reload'},
+                context: mCtx,
+              );
+            } catch (_) {}
+          }
 
           return true;
         } catch (e, stack) {

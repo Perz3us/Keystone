@@ -265,6 +265,29 @@ void main() {
       expect(r.scripts.where((s) => s.contains('nft delete')), isEmpty);
     });
 
+    test('block flush reloads first, then drops the device flows', () {
+      final s = RealApiService.blockFlushScript('20:47:DA:56:00:B7');
+      expect(s, contains("grep -i '20:47:DA:56:00:B7'"));
+      expect(s, contains('/tmp/dhcp.leases'));
+      expect(s, contains('hook prerouting priority -300'));
+      expect(s, contains('firewall.keystone_block.path=/etc/keystone/block.fw'));
+      expect(s.indexOf('cat > /etc/keystone/block.fw'), lessThan(s.indexOf('reload')));
+      final reload = s.indexOf('/etc/init.d/firewall reload');
+      expect(reload, greaterThanOrEqualTo(0));
+      expect(s.indexOf('conntrack -D'), greaterThan(reload));
+    });
+
+    test('later calls reuse a renewed session token', () {
+      final api = RealApiService();
+      expect(api.currentToken('a'), 'a');
+      api.rememberRenewedToken('a', 'b');
+      api.rememberRenewedToken('b', 'c');
+      expect(api.currentToken('a'), 'c');
+      expect(api.currentToken('b'), 'c');
+      api.rememberRenewedToken('c', 'c');
+      expect(api.currentToken('c'), 'c');
+    });
+
     test('unbanning a client keeps its pause and the user rules', () async {
       const mac = '02:AA:BB:CC:DD:09';
       final r = _routerWithBlocks(mac);

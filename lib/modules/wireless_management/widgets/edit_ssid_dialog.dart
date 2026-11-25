@@ -896,7 +896,9 @@ class _EditSsidDialogState extends ConsumerState<EditSsidDialog> {
                       _selectedPmf = '2';
                     } else if (val == 'none') {
                       _selectedPmf = '0';
-                    } else if (_selectedPmf == '0' && val == 'sae-mixed') {
+                    } else if (_selectedPmf == '2' ||
+                        (_selectedPmf == '0' && val == 'sae-mixed')) {
+                      // Leaving WPA3-only: required PMF locks out WPA2-only devices.
                       _selectedPmf = '1';
                     }
                   }),

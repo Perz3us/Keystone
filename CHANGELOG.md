@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1
+
+- Pause now cuts a device off completely, including connections it already had open, and also works when the router runs a proxy such as Passwall
+- Changing Wi-Fi security no longer fails with "Failed to update wireless section in UCI"
+- Switching a network from WPA3 back to WPA2 or mixed mode no longer locks out older phones
+- Saving settings keeps working after the router session expires
+
 ## 1.0.0
 
 First public release.
