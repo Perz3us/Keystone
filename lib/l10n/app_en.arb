@@ -1,0 +1,988 @@
+{
+  "@@locale": "en",
+  "appTitle": "Keystone",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "appDescription": "OpenWrt Router Management App",
+  "@appDescription": {
+    "description": "Short description of the application"
+  },
+  "navDashboard": "Home",
+  "@navDashboard": {
+    "description": "Navigation item for the dashboard tab"
+  },
+  "navInterfaces": "Network",
+  "@navInterfaces": {
+    "description": "Navigation item for the interfaces tab"
+  },
+  "navClients": "Devices",
+  "@navClients": {
+    "description": "Navigation item for the clients tab"
+  },
+  "navMore": "More",
+  "@navMore": {
+    "description": "Navigation item for more tools and modules"
+  },
+  "navSettings": "Settings",
+  "@navSettings": {
+    "description": "Navigation item for settings screen"
+  },
+  "actionSave": "Save",
+  "@actionSave": {
+    "description": "Generic save button label"
+  },
+  "actionCancel": "Cancel",
+  "@actionCancel": {
+    "description": "Generic cancel button label"
+  },
+  "actionApply": "Apply",
+  "@actionApply": {
+    "description": "Generic apply button label"
+  },
+  "actionDelete": "Delete",
+  "@actionDelete": {
+    "description": "Generic delete button label"
+  },
+  "actionDismiss": "Dismiss",
+  "@actionDismiss": {
+    "description": "Dismiss button label"
+  },
+  "actionClose": "Close",
+  "@actionClose": {
+    "description": "Close dialog or modal label"
+  },
+  "actionRetry": "Retry",
+  "@actionRetry": {
+    "description": "Retry action label"
+  },
+  "actionExit": "Exit",
+  "@actionExit": {
+    "description": "Exit action label"
+  },
+  "statusConnected": "Connected",
+  "@statusConnected": {
+    "description": "Connection status connected"
+  },
+  "statusOffline": "Offline",
+  "@statusOffline": {
+    "description": "Network status offline"
+  },
+  "statusError": "Error",
+  "@statusError": {
+    "description": "Error label"
+  },
+  "settingsTitle": "Settings",
+  "@settingsTitle": {
+    "description": "Title of the settings screen"
+  },
+  "languageTitle": "Language",
+  "@languageTitle": {
+    "description": "Language selection setting label"
+  },
+  "languageSystemDefault": "System Default",
+  "@languageSystemDefault": {
+    "description": "Use system language setting"
+  },
+  "diagnosticsSection": "Router Diagnostics & Features",
+  "@diagnosticsSection": {
+    "description": "Diagnostics settings section header"
+  },
+  "loginAuthenticating": "Authenticating...",
+  "@loginAuthenticating": {
+    "description": "Loading message when authentication is in progress"
+  },
+  "loginRequiredField": "This field is required",
+  "@loginRequiredField": {
+    "description": "Validation error for empty required fields"
+  },
+  "firmwareVersion": "Firmware Version",
+  "@firmwareVersion": {
+    "description": "OpenWrt firmware version label"
+  },
+  "rxRate": "Download",
+  "@rxRate": {
+    "description": "Receive / download rate label"
+  },
+  "txRate": "Upload",
+  "@txRate": {
+    "description": "Transmit / upload rate label"
+  },
+  "ipAddress": "IP Address",
+  "@ipAddress": {
+    "description": "IP address column or field label"
+  },
+  "macAddress": "MAC Address",
+  "@macAddress": {
+    "description": "MAC hardware address column or field label"
+  },
+  "hostname": "Hostname",
+  "@hostname": {
+    "description": "Device hostname column or field label"
+  },
+  "navWireless": "Wi-Fi",
+  "@navWireless": {
+    "description": "Navigation item for the wireless management tab"
+  },
+  "colorPalette": "Color Palette",
+  "@colorPalette": {
+    "description": "Label for the color palette / theme color selector"
+  },
+  "exitDialogTitle": "Exit Keystone?",
+  "@exitDialogTitle": {
+    "description": "Title of the exit confirmation dialog"
+  },
+  "exitDialogMessage": "Are you sure you want to exit the application?",
+  "@exitDialogMessage": {
+    "description": "Body text of the exit confirmation dialog"
+  },
+  "termsAndConditionsTitle": "Terms & Conditions",
+  "@termsAndConditionsTitle": {
+    "description": "Title for terms & conditions"
+  },
+  "privacyPolicyTitle": "Privacy Policy",
+  "@privacyPolicyTitle": {
+    "description": "Title for privacy policy"
+  },
+  "privacyPolicySubtitle": "Read our local-first zero-telemetry policy",
+  "@privacyPolicySubtitle": {
+    "description": "Subtitle for privacy policy"
+  },
+  "licenseAttributionTitle": "License & Attribution (GPLv3)",
+  "@licenseAttributionTitle": {
+    "description": "Title for license & attribution"
+  },
+  "openSourceLicensesTitle": "Open Source Licenses",
+  "@openSourceLicensesTitle": {
+    "description": "Title for open source licenses"
+  },
+  "routerSecuritySection": "ROUTER SECURITY & ACCESS",
+  "@routerSecuritySection": {
+    "description": "Section header for router security & access"
+  },
+  "changePasswordSubtitle": "Update root/admin password on active router",
+  "@changePasswordSubtitle": {
+    "description": "Subtitle for change password tile"
+  },
+  "rpcPermissionsVerified": "RPC permissions & execution modules verified",
+  "@rpcPermissionsVerified": {
+    "description": "Notice when RPC permissions are verified"
+  },
+  "rpcDialogVerifiedSubtitle": "The router has everything Keystone needs.",
+  "@rpcDialogVerifiedSubtitle": {
+    "description": "Subtitle in RPC permissions dialog when everything is verified"
+  },
+  "rpcStatusLuciRpc": "LuCI RPC Modules",
+  "@rpcStatusLuciRpc": {
+    "description": "Status item title for LuCI RPC modules"
+  },
+  "rpcStatusBackendExec": "Backend Execution Permissions",
+  "@rpcStatusBackendExec": {
+    "description": "Status item title for backend execution permissions"
+  },
+  "rpcStatusUciAccess": "UCI Configuration Access",
+  "@rpcStatusUciAccess": {
+    "description": "Status item title for UCI configuration access"
+  },
+  "rpcManualSetupScript": "Manual Setup / Verification Script",
+  "@rpcManualSetupScript": {
+    "description": "Card header for manual RPC setup script"
+  },
+  "rpcBtnReverifyRepair": "Re-verify / Repair",
+  "@rpcBtnReverifyRepair": {
+    "description": "Button to re-verify or repair RPC permissions"
+  },
+  "loginFailedSession": "Failed to establish session with {target}.",
+  "@loginFailedSession": {
+    "description": "Error message when session could not be established with router",
+    "placeholders": {
+      "target": {
+        "type": "String",
+        "example": "ncxTest (192.168.1.1)"
+      }
+    }
+  },
+  "loginInvalidCredentials": "Login Failed: Invalid credentials or host unreachable.",
+  "@loginInvalidCredentials": {
+    "description": "Error message when login fails due to credentials or network unreachable"
+  },
+  "cardQuickActions": "Quick Actions Bar",
+  "@cardQuickActions": {
+    "description": "Name for quick actions card"
+  },
+  "secDeviceManagement": "Device Management",
+  "@secDeviceManagement": {
+    "description": "Section header on More screen"
+  },
+  "modSystemMonitoringName": "System Monitoring",
+  "@modSystemMonitoringName": {
+    "description": "System monitoring module name"
+  },
+  "modFirewallName": "Firewall & Security",
+  "@modFirewallName": {
+    "description": "Firewall module name"
+  },
+  "modServicesName": "Services & System",
+  "@modServicesName": {
+    "description": "Services module name"
+  },
+  "modVpnName": "VPN & Connectivity",
+  "@modVpnName": {
+    "description": "VPN module name"
+  },
+  "modPackagesName": "OPKG/APK Package Manager",
+  "@modPackagesName": {
+    "description": "Package manager module name"
+  },
+  "modBackupName": "Backup & Flash Firmware",
+  "@modBackupName": {
+    "description": "Backup & Firmware module name"
+  },
+  "bannedClientsHubTitle": "Banned Clients Hub",
+  "@bannedClientsHubTitle": {
+    "description": "Title for banner explaining banned and restricted clients section"
+  },
+  "addStaticLeaseTitle": "Add Static Lease",
+  "@addStaticLeaseTitle": {
+    "description": "Title of dialog when adding a new static DHCP lease"
+  },
+  "banClientFromWifi": "Ban Client from Wi-Fi",
+  "@banClientFromWifi": {
+    "description": "Dialog title for banning a wireless client from Wi-Fi"
+  },
+  "rpcdPermissionDenied": "Permission Denied (RPCD ACL)",
+  "@rpcdPermissionDenied": {
+    "description": "Title of RPCD access permission denied dialog"
+  },
+  "switchTopologyUnavailable": "Switch Topology Unavailable",
+  "@switchTopologyUnavailable": {
+    "description": "Title when switch topology cannot be probed"
+  },
+  "wirelessOverview": "Wireless Overview",
+  "@wirelessOverview": {
+    "description": "Card title for Wireless Overview"
+  },
+  "guestWifiMasterControl": "Guest Wi-Fi Master Control",
+  "@guestWifiMasterControl": {
+    "description": "Title for Master Control Card in Guest Wi-Fi"
+  },
+  "wifiAccessControlTitle": "Wi-Fi Access Control",
+  "@wifiAccessControlTitle": {
+    "description": "App bar title for Wi-Fi Access Control screen"
+  },
+  "dhcpDnsTitle": "DHCP & DNS Management",
+  "@dhcpDnsTitle": {
+    "description": "Title of the DHCP & DNS Server card/section"
+  },
+  "firewallTitle": "Firewall & Security",
+  "@firewallTitle": {
+    "description": "App bar title for Firewall & Security screen"
+  },
+  "vpnConnectivityTitle": "VPN Connectivity",
+  "@vpnConnectivityTitle": {
+    "description": "App bar title for VPN screen"
+  },
+  "diagNetworkDiagnostics": "Network Diagnostics",
+  "@diagNetworkDiagnostics": {
+    "description": "App bar title for Network Diagnostics screen"
+  },
+  "diagSegmentRoutes": "Routes",
+  "@diagSegmentRoutes": {
+    "description": "Segment tab label for kernel routing table"
+  },
+  "diagSegmentArp": "ARP",
+  "@diagSegmentArp": {
+    "description": "Segment tab label for ARP neighbor table"
+  },
+  "diagSegmentConntrack": "Conntrack",
+  "@diagSegmentConntrack": {
+    "description": "Segment tab label for connection tracking table"
+  },
+  "chartingTitle": "Real-Time Metrics",
+  "@chartingTitle": {
+    "description": "Screen title for real-time charting"
+  },
+  "sysMonTitle": "System Monitoring",
+  "@sysMonTitle": {
+    "description": "App bar title for System Monitoring screen"
+  },
+  "storageMonTitle": "Storage Monitoring",
+  "@storageMonTitle": {
+    "description": "App bar title for Storage Monitoring screen"
+  },
+  "pkgCardTitle": "OPKG/APK Packages",
+  "@pkgCardTitle": {
+    "description": "Title of OPKG/APK Packages card on dashboard"
+  },
+  "servicesSysTitle": "Services & System",
+  "@servicesSysTitle": {
+    "description": "Screen title for Services & System"
+  },
+  "sysUpgradeTitle": "Backup / Flash Firmware",
+  "@sysUpgradeTitle": {
+    "description": "Screen title for Backup / Flash Firmware"
+  },
+  "parentalControlsTitle": "Parental Controls",
+  "@parentalControlsTitle": {
+    "description": "Screen title for Parental Controls"
+  },
+  "selectRouter": "Select Router",
+  "backupDownloadedSuccess": "Backup archive downloaded.",
+  "backupWriteFailed": "Failed to write backup file to storage.",
+  "backupInvalidArchiveExt": "Invalid Archive Extension",
+  "backupFileReadError": "File Read Error",
+  "backupCorruptArchive": "Corrupt or Invalid Archive Payload",
+  "backupRestoredSuccess": "Configuration restored from archive.",
+  "backupRestoreFailed": "Failed to restore backup configuration.",
+  "sysUpgradeFactoryResetInitiated": "Factory reset initiated. Router is now rebooting...",
+  "sysUpgradeFactoryResetFailed": "Failed to execute factory reset on router.",
+  "sysUpgradePartitionSaved": "Partition image saved.",
+  "sysUpgradePartitionSaveFailed": "Failed to write partition image file to storage.",
+  "sysUpgradeInvalidFirmwareFormat": "Invalid Firmware Format",
+  "sysUpgradeFlashInitiated": "Flashing started. The router is restarting.",
+  "sysUpgradeFlashFailed": "Firmware Flash Failed",
+  "actionCopyFilePath": "Copy File Path",
+  "checkForUpdatesSubtitleIpa": "Check for new iOS beta release builds on GitHub",
+  "@checkForUpdatesSubtitleIpa": {
+    "description": "Subtitle for updates tile on iOS IPA builds"
+  },
+  "updateAvailableIosBetaTitle": "iOS Beta Update Available",
+  "@updateAvailableIosBetaTitle": {
+    "description": "Dialog title when an iOS beta update is available"
+  },
+  "updateAvailableIosBetaDesc": "A new iOS beta version is available on GitHub Releases.",
+  "@updateAvailableIosBetaDesc": {
+    "description": "Description in update dialog for iOS beta releases"
+  },
+  "updateRedirectToRelease": "View Release",
+  "@updateRedirectToRelease": {
+    "description": "Button label to redirect user to the iOS beta GitHub release page"
+  },
+  "updateNoBetaReleasesFound": "No iOS beta releases found on GitHub.",
+  "@updateNoBetaReleasesFound": {
+    "description": "Error message when no iOS beta releases are found on GitHub"
+  },
+  "updateUpToDateIosDesc": "You are running the latest iOS beta version of Keystone (v{currentVersion}).",
+  "@updateUpToDateIosDesc": {
+    "description": "Notice indicating current iOS beta version is up to date",
+    "placeholders": {
+      "currentVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "updateNoBetaUpdateRequired": "The latest iOS beta release on GitHub is v{latestVersion}. No update is required.",
+  "@updateNoBetaUpdateRequired": {
+    "description": "Notice indicating current iOS build is ahead of GitHub beta release",
+    "placeholders": {
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "loginDirectLanBadge": "DIRECT LAN CONNECTION",
+  "@loginDirectLanBadge": {
+    "description": "Badge text indicating direct local area network link"
+  },
+  "loginTargetEndpoint": "TARGET ROUTER ENDPOINT",
+  "@loginTargetEndpoint": {
+    "description": "Section header for router connection details"
+  },
+  "loginProfileNameOptional": "Profile Name (Optional)",
+  "@loginProfileNameOptional": {
+    "description": "Label for optional profile nickname field"
+  },
+  "loginRouterProfilesHeader": "ROUTER PROFILES",
+  "@loginRouterProfilesHeader": {
+    "description": "Section header for saved router profiles"
+  },
+  "loginManageProfiles": "Manage",
+  "@loginManageProfiles": {
+    "description": "Button label to open router profile manager"
+  },
+  "loginNewRouterChip": "New Router",
+  "@loginNewRouterChip": {
+    "description": "Chip label to create a new router profile"
+  },
+  "loginNeedHelp": "Need help?",
+  "@loginNeedHelp": {
+    "description": "Link button text to open troubleshooting guide"
+  },
+  "cardWiredClients": "Wired Clients",
+  "@cardWiredClients": {
+    "description": "Label for wired client count in dashboard connected clients card"
+  },
+  "cardWirelessClients": "Wireless Clients",
+  "@cardWirelessClients": {
+    "description": "Label for wireless client count in dashboard connected clients card"
+  },
+  "clientsConnectedCount": "{count} Connected",
+  "@clientsConnectedCount": {
+    "description": "Subtitle showing connected client count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardClientsCount": "{count, plural, =0{0 clients} =1{1 client} other{{count} clients}}",
+  "@cardClientsCount": {
+    "description": "Pluralized station client count badge in wireless card",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardTapForClients": "Tap for clients",
+  "@cardTapForClients": {
+    "description": "Hint text under wireless station count"
+  },
+  "toastCopiedToClipboard": "Copied to clipboard.",
+  "@toastCopiedToClipboard": {
+    "description": "Toast message when content is copied to clipboard"
+  },
+  "toastItemCopied": "{label} copied",
+  "@toastItemCopied": {
+    "description": "Toast message indicating a specific item was copied",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "pillGuestNetwork": "Guest Network",
+  "@pillGuestNetwork": {
+    "description": "Badge pill label on wireless interface card indicating this SSID is a guest network"
+  },
+  "statusHidden": "HIDDEN",
+  "@statusHidden": {
+    "description": "Badge label for a hidden (non-broadcasting) Wi-Fi SSID"
+  },
+  "detectingHardware": "Detecting hardware…",
+  "@detectingHardware": {
+    "description": "Loading/detection state shown in backup screen before router model is resolved"
+  },
+  "wifiTechParams": "Wireless Interface Parameters",
+  "@wifiTechParams": {
+    "description": "Section title for expanded wireless interface technical details"
+  },
+  "wifiCopyPassword": "Copy Password",
+  "wifiCopyQrPayload": "Copy QR Payload",
+  "cronSchedulePreset": "Schedule Preset",
+  "cronPresetEvery5Min": "Every 5 Minutes",
+  "cronPresetEvery15Min": "Every 15 Minutes",
+  "cronPresetEveryHour": "Every Hour",
+  "cronPresetEveryDayMidnight": "Every Day at Midnight (12:00 AM)",
+  "cronPresetEveryDay4Am": "Every Day at 4:00 AM",
+  "cronPresetEveryWeekdayMidnight": "Every Weekday (Mon-Fri) at Midnight",
+  "cronPresetEverySundayMidnight": "Every Sunday at Midnight",
+  "cronPresetFirstDayMonthMidnight": "First Day of Every Month at Midnight",
+  "cronPresetCustomExpression": "Custom Expression",
+  "cronChipRebootRouter": "Reboot Router",
+  "cronChipPingCheck": "Ping Check",
+  "cronTaskActiveState": "Task Active State",
+  "cronRunsEveryMinute": "Runs every minute",
+  "cronRunsEveryXMinutes": "Runs every {minutes} minutes",
+  "@cronRunsEveryXMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "cronRunsEveryXHoursAt": "Runs every {hours} hours at :{minutes}",
+  "@cronRunsEveryXHoursAt": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "cronRunsEveryDayAt": "Runs every day at {time}",
+  "@cronRunsEveryDayAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cronRunsEverySundayAt": "Runs every Sunday at {time}",
+  "@cronRunsEverySundayAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cronRunsOnWeekdaysAt": "Runs on weekdays (Mon-Fri) at {time}",
+  "@cronRunsOnWeekdaysAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cronRunsOnDayOfMonthAt": "Runs on day {day} of every month at {time}",
+  "@cronRunsOnDayOfMonthAt": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cronRunsOnSchedule": "Runs on schedule ({schedule})",
+  "@cronRunsOnSchedule": {
+    "placeholders": {
+      "schedule": {
+        "type": "String"
+      }
+    }
+  },
+  "cronCustomSchedule": "Custom schedule",
+  "rdSettingsQuickActionsSubtitle": "Select shortcut action buttons (Reboot, Flush DNS, Guest Wi-Fi, VPN, Refresh) for your dashboard",
+  "rdSettingsSystemVitalsSubtitle": "Choose hardware performance metrics (CPU, RAM, Load Average, Uptime, Temperature) to display",
+  "rdSettingsTrafficSectionTitle": "Traffic & Throughput Settings",
+  "rdSettingsNetworkPrivacyTitle": "Network & Privacy Options",
+  "rdSettingsWirelessNetworksTitle": "Wireless Networks",
+  "rdSettingsWiredInterfacesTitle": "Wired & Virtual Interfaces",
+  "diagMetricWanInterface": "WAN Interface",
+  "@diagMetricWanInterface": {
+    "description": "Metric card label for WAN Interface"
+  },
+  "diagFlushDnsTitle": "Flush DNS Cache",
+  "@diagFlushDnsTitle": {
+    "description": "Card title for flushing DNS cache"
+  },
+  "diagExportCardTitle": "Generate Diagnostic Report",
+  "@diagExportCardTitle": {
+    "description": "Title of diagnostic report export card"
+  },
+  "channelInvalidForCountry": "Channel {channel} is not valid for country {countryCode}. Valid channels: {validChannels}",
+  "@channelInvalidForCountry": {
+    "description": "Validation error when channel is not permitted in country regulatory domain",
+    "placeholders": {
+      "channel": {
+        "type": "String",
+        "example": "48"
+      },
+      "countryCode": {
+        "type": "String",
+        "example": "US"
+      },
+      "validChannels": {
+        "type": "String",
+        "example": "36, 40, 44, 48"
+      }
+    }
+  },
+  "toastRadioSettingsSuccess": "Radio settings applied directly to router.",
+  "@toastRadioSettingsSuccess": {
+    "description": "Toast message when radio settings are applied"
+  },
+  "toastRadioSettingsFailed": "Failed to apply radio settings to router.",
+  "@toastRadioSettingsFailed": {
+    "description": "Toast message when applying radio settings fails"
+  },
+  "dialogDisablingActiveRadioTitle": "Disabling Active Radio",
+  "@dialogDisablingActiveRadioTitle": {
+    "description": "Confirmation title when disabling radio that hosts currently active session"
+  },
+  "dialogDisablingActiveRadioMessage": "Disabling physical radio \"{radioName}\" will turn off all wireless networks hosted on it and disconnect your active session.",
+  "@dialogDisablingActiveRadioMessage": {
+    "description": "Warning message when disabling active physical radio",
+    "placeholders": {
+      "radioName": {
+        "type": "String",
+        "example": "radio0"
+      }
+    }
+  },
+  "btnProceedAndDisable": "Proceed & Disable",
+  "@btnProceedAndDisable": {
+    "description": "Button to confirm and disable active physical radio"
+  },
+  "btnProceedAnyway": "Proceed Anyway",
+  "@btnProceedAnyway": {
+    "description": "Button to proceed anyway past a warning"
+  },
+  "toastSsidUpdateSuccess": "SSID settings applied directly to router.",
+  "@toastSsidUpdateSuccess": {
+    "description": "Toast message when SSID configuration is updated"
+  },
+  "toastSsidUpdateFailed": "Failed to update wireless section in UCI.",
+  "@toastSsidUpdateFailed": {
+    "description": "Toast message when updating SSID in UCI fails"
+  },
+  "backupStatusFetchingPreserved": "Fetching preserved backup files list...",
+  "@backupStatusFetchingPreserved": {
+    "description": "Status message while fetching preserved files list"
+  },
+  "backupStatusGenerating": "Generating configuration backup on router...",
+  "@backupStatusGenerating": {
+    "description": "Status message while generating configuration backup archive on router"
+  },
+  "backupStatusUploadingArchive": "Uploading archive to router...",
+  "@backupStatusUploadingArchive": {
+    "description": "Status message while uploading backup archive to router"
+  },
+  "backupStatusRestoring": "Restoring backup configuration...",
+  "@backupStatusRestoring": {
+    "description": "Status message while restoring backup configuration archive"
+  },
+  "backupStatusFactoryReset": "Performing factory reset on router...",
+  "@backupStatusFactoryReset": {
+    "description": "Status message while factory reset is executing on router"
+  },
+  "backupStatusDumpingPartition": "Dumping partition image ({dev})...",
+  "@backupStatusDumpingPartition": {
+    "description": "Status message while dumping partition image",
+    "placeholders": {
+      "dev": {
+        "type": "String",
+        "example": "mtd0"
+      }
+    }
+  },
+  "backupStatusUploadingFirmware": "Uploading firmware image ({size} MB)...",
+  "@backupStatusUploadingFirmware": {
+    "description": "Status message while uploading firmware image",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "16.4"
+      }
+    }
+  },
+  "backupStatusVerifyingFirmware": "Verifying image compatibility (sysupgrade -t)...",
+  "@backupStatusVerifyingFirmware": {
+    "description": "Status message while verifying image compatibility with sysupgrade -t"
+  },
+  "backupStatusFlashing": "Executing sysupgrade flash on router...",
+  "@backupStatusFlashing": {
+    "description": "Status message while executing sysupgrade flash command"
+  },
+  "backupDownloadSuccessTitle": "Backup saved",
+  "@backupDownloadSuccessTitle": {
+    "description": "Dialog title shown when router backup download completes successfully"
+  },
+  "backupPublicDownloadsFolder": "Public Downloads Folder",
+  "@backupPublicDownloadsFolder": {
+    "description": "Badge label indicating file saved to the device's public Downloads directory"
+  },
+  "backupPrivateAppStorage": "Private App Storage (/Android/data/)",
+  "@backupPrivateAppStorage": {
+    "description": "Badge label indicating file saved to private app sandbox storage"
+  },
+  "backupSavedFileLocation": "Saved File Location:",
+  "@backupSavedFileLocation": {
+    "description": "Header label above the file path box in download prompt dialog"
+  },
+  "backupPathLabel": "Backup Path",
+  "@backupPathLabel": {
+    "description": "Label used when copying backup file path to clipboard"
+  },
+  "fileSavedSuccessfully": "File saved",
+  "@fileSavedSuccessfully": {
+    "description": "Default dialog title when a file has been saved to device"
+  },
+  "filePathLabel": "File Path",
+  "@filePathLabel": {
+    "description": "Default label used when copying file path to clipboard"
+  },
+  "fileSizePrefix": "Size: {size}",
+  "@fileSizePrefix": {
+    "description": "Formatted file size string",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "15.6 KB"
+      }
+    }
+  },
+  "statusCheckingSpace": "Checking space...",
+  "@statusCheckingSpace": {
+    "description": "Placeholder text while querying remaining storage space"
+  },
+  "statusAvailableFallback": "Available",
+  "@statusAvailableFallback": {
+    "description": "Fallback text when available space value cannot be parsed numerically"
+  },
+  "vpnWireguardSectionTitle": "WireGuard VPN Interfaces & Peers",
+  "@vpnWireguardSectionTitle": {
+    "description": "Section header for WireGuard VPN Interfaces & Peers"
+  },
+  "firewallZonesOverviewTitle": "Firewall Zones Overview",
+  "@firewallZonesOverviewTitle": {
+    "description": "Section header for Firewall Zones Overview"
+  },
+  "firewallZonesCount": "{count} Zones",
+  "@firewallZonesCount": {
+    "description": "Number of firewall zones configured",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "firewallInputPolicy": "Input Policy",
+  "@firewallInputPolicy": {
+    "description": "Firewall input policy label"
+  },
+  "firewallOutputPolicy": "Output Policy",
+  "@firewallOutputPolicy": {
+    "description": "Firewall output policy label"
+  },
+  "firewallForwardPolicy": "Forward Policy",
+  "@firewallForwardPolicy": {
+    "description": "Firewall forward policy label"
+  },
+  "servicesSysTestingDdns": "Testing DDNS lookup & resolution...",
+  "@servicesSysTestingDdns": {
+    "description": "Progress dialog message while testing DDNS lookup and resolution"
+  },
+  "updateAvailableTitle": "Update Available",
+  "@updateAvailableTitle": {
+    "description": "Dialog title when an app update is available"
+  },
+  "firewallWizardPresetPlex": "Plex Media Server",
+  "@firewallWizardPresetPlex": {
+    "description": "Preset name for Plex Media Server"
+  },
+  "firewallWizardPresetMinecraft": "Minecraft Server",
+  "@firewallWizardPresetMinecraft": {
+    "description": "Preset name for Minecraft Server"
+  },
+  "firewallWizardPresetWebServer": "Web Server (HTTP/HTTPS)",
+  "@firewallWizardPresetWebServer": {
+    "description": "Preset name for Web Server"
+  },
+  "firewallWizardPresetCustom": "Custom Service",
+  "@firewallWizardPresetCustom": {
+    "description": "Preset name for custom service"
+  },
+  "firewallConflictPortInUse": "This port is already being used by another rule.",
+  "@firewallConflictPortInUse": {
+    "description": "Human-friendly conflict error when port is already forwarded"
+  },
+  "firewallConflictManagementPort": "This port is reserved for router administration. Exposing it externally is not permitted.",
+  "@firewallConflictManagementPort": {
+    "description": "Safety warning when port targets router management"
+  },
+  "firewallSuccessPortOpened": "Port {port} is now open for {service} on {device}.",
+  "@firewallSuccessPortOpened": {
+    "description": "Success message when port forward is created",
+    "placeholders": {
+      "port": {
+        "type": "String",
+        "example": "32400"
+      },
+      "service": {
+        "type": "String",
+        "example": "Plex"
+      },
+      "device": {
+        "type": "String",
+        "example": "Living Room PC"
+      }
+    }
+  },
+  "firewallBlockUnableToDetermineDesc": "The firewall protection status for this connection couldn't be checked. Look at the router's firewall settings first.",
+  "@firewallBlockUnableToDetermineDesc": {
+    "description": "Description when firewall status cannot be determined"
+  },
+  "firewallReadOnlyNotice": "Read-only access: Changes cannot be applied on this router account.",
+  "@firewallReadOnlyNotice": {
+    "description": "Notice when account lacks UCI write permissions"
+  },
+  "aghRoutingApiOnly": "API Reachable Only",
+  "aghRoutingServiceRunning": "Service Running Only",
+  "aghRoutingForwardingUnverified": "Forwarding Unverified",
+  "aghRoutingForwardingVerified": "Router Forwarding Verified",
+  "aghRoutingClientVerified": "Client Queries Verified",
+  "aghRoutingExternalStandalone": "External Standalone",
+  "aghRoutingMisconfigured": "Routing Misconfigured",
+  "aghRoutingUnknown": "Routing Unknown",
+  "aghIpv6NoBypass": "Aligned / No Bypass Detected",
+  "aghIpv6ExternalBypass": "External IPv6 DNS Advertised",
+  "aghIpv6UnsupportedListener": "No IPv6 Listener in AdGuard",
+  "aghIpv6UnableToVerify": "Unable to verify IPv6 advertisement",
+  "aghConfigureRouterDns": "Configure Router DNS",
+  "aghReconfigureRouterDns": "Reconfigure Router DNS",
+  "aghConfigureDnsTitle": "Configure Router DNS Forwarding",
+  "aghConfigureDnsDescription": "Route router upstream DNS queries through AdGuard Home.",
+  "aghConfigureDnsTarget": "DNS Destination",
+  "aghConfigureDnsChecking": "Checking DNS configuration…",
+  "aghConfigureDnsModeExclusive": "Exclusive Forwarding",
+  "aghConfigureDnsModeExclusiveDesc": "Route all router DNS queries exclusively to AdGuard Home. (Replaces current upstreams)",
+  "aghConfigureDnsModeExclusiveWarning": "Outage Risk: If AdGuard Home becomes unreachable, internet DNS resolution will stop working across your router and network until restored.",
+  "aghConfigureDnsModeFallback": "Fallback Retention",
+  "aghConfigureDnsModeFallbackDesc": "Keep existing resolvers as secondary fallbacks alongside AdGuard Home.",
+  "aghConfigureDnsModeFallbackWarning": "Bypass Risk: Dnsmasq may query fallbacks concurrently or on slow queries, allowing some traffic to bypass AdGuard Home filtering.",
+  "aghConfigureDnsRollbackNotice": "Protected by 30-second automatic router rollback watchdog.",
+  "aghConfigureDnsApplying": "Applying configuration…",
+  "aghConfigureDnsVerifying": "Verifying router reachability…",
+  "aghConfigureDnsConfirming": "Confirming changes…",
+  "aghConfigureDnsSuccess": "Router DNS forwarding configured.",
+  "aghConfigureDnsRolledBack": "Router reachability check failed. 30-second rollback watchdog restored previous configuration.",
+  "aghConfigureDnsAmbiguous": "Configuration was applied, but confirmation response wasn't clear. Check the router.",
+  "aghConfigureDnsHostnameWarning": "Warning: Destination is a hostname. Using a static IP is recommended to prevent bootstrap resolution failures.",
+  "aghConfigureDnsLoopError": "Cannot configure: Forwarding loop detected where AdGuard upstream points back to router.",
+  "aghConfigureDnsConflictError": "Cannot configure: Port collision between AdGuard and dnsmasq.",
+  "aghConfigureDnsActionApply": "Apply Configuration",
+  "aghConfigureDnsCurrentUpstreams": "Current Upstreams",
+  "aghConfigureDnsNewUpstreams": "New Upstreams",
+  "aghRevertRouterDns": "Remove Forwarding",
+  "aghRevertDnsTitle": "Remove Router DNS Forwarding",
+  "aghRevertDnsDescription": "Remove AdGuard Home forwarding rule from router dnsmasq. Dnsmasq will stop routing queries to AdGuard Home.",
+  "aghRevertDnsRuleToRemove": "Rule to Remove",
+  "aghRevertDnsRemainingUpstreams": "Remaining Upstreams",
+  "aghRevertDnsNoRemainingWarning": "No remaining upstream resolvers configured. Dnsmasq will fall back to ISP-assigned DNS from WAN interface.",
+  "aghRevertDnsActionRemove": "Remove Forwarding",
+  "aghRevertDnsRemoving": "Removing DNS forwarding…",
+  "aghRevertDnsSuccess": "Router DNS forwarding removed.",
+  "aghRevertDnsSuccessTitle": "DNS Forwarding Removed",
+  "aghRevertDnsFailedTitle": "Failed to Remove Forwarding",
+  "aghRevertDnsMissingError": "No active dnsmasq forwarder rule targeting this AdGuard Home instance was found.",
+  "aghRevertDnsAmbiguousError": "Multiple ambiguous forwarding rules targeting AdGuard Home were found. Check the settings in LuCI.",
+  "sysUpgradeDirectRouterDownload": "Instructing router to download firmware directly ({size})...",
+  "@sysUpgradeDirectRouterDownload": {
+    "description": "Status message when router is downloading firmware image directly",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "sysUpgradeDirectRouterDownloadSuccess": "Firmware downloaded directly onto router.",
+  "@sysUpgradeDirectRouterDownloadSuccess": {
+    "description": "Status message when direct router download succeeds"
+  },
+  "sysUpgradeFallbackStreaming": "Router direct download unavailable; streaming image from app to router...",
+  "@sysUpgradeFallbackStreaming": {
+    "description": "Status message when falling back to app-mediated streaming"
+  },
+  "sysUpgradeDownloadingImage": "Downloading OpenWrt {version} ({size})...",
+  "@sysUpgradeDownloadingImage": {
+    "description": "Status message when downloading firmware image in app",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "sysUpgradeVerifyingChecksum": "Verifying SHA-256 checksum...",
+  "@sysUpgradeVerifyingChecksum": {
+    "description": "Status message during SHA-256 verification"
+  },
+  "sysUpgradeChecksumMismatch": "SHA-256 checksum mismatch! Expected: {expected}, Computed: {computed}. Upgrade aborted for device safety.",
+  "@sysUpgradeChecksumMismatch": {
+    "description": "Error message when checksum verification fails",
+    "placeholders": {
+      "expected": {
+        "type": "String"
+      },
+      "computed": {
+        "type": "String"
+      }
+    }
+  },
+  "sysUpgradeTransferringImage": "Transferring image to router ({size} MB)...",
+  "@sysUpgradeTransferringImage": {
+    "description": "Status message during chunked upload to router",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "sysUpgradeVerifyingRouterCompatibility": "Verifying compatibility on router (sysupgrade -t)...",
+  "@sysUpgradeVerifyingRouterCompatibility": {
+    "description": "Status message during router pre-flash validation"
+  },
+  "sysUpgradeValidationFailed": "Router pre-flash validation check failed: {reason}. Upgrade cancelled.",
+  "@sysUpgradeValidationFailed": {
+    "description": "Error message when router validation fails",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "sysUpgradeExecutingFlash": "Executing sysupgrade flash on router...",
+  "@sysUpgradeExecutingFlash": {
+    "description": "Status message when flash command is being sent to router"
+  },
+  "sysUpgradeRouterNotActive": "Router connection is not active.",
+  "@sysUpgradeRouterNotActive": {
+    "description": "Toast error message when router connection is not active"
+  },
+  "sysUpgradeUrlNotFound": "Download URL not found for this upgrade.",
+  "@sysUpgradeUrlNotFound": {
+    "description": "Toast error message when download URL is missing"
+  },
+  "dnsmasqReloadTitle": "Reload DHCP & DNS Service",
+  "@dnsmasqReloadTitle": {
+    "description": "Translation for dnsmasqReloadTitle"
+  },
+  "logViewerTitle": "System Logs",
+  "@logViewerTitle": {
+    "description": "Translation for logViewerTitle"
+  },
+  "sshTerminalTitle": "SSH Console",
+  "@sshTerminalTitle": {
+    "description": "Translation for sshTerminalTitle"
+  },
+  "sshCommandSaved": "Command saved",
+  "@sshCommandSaved": {
+    "description": "Translation for sshCommandSaved"
+  },
+  "sshCommandDeleted": "Command deleted",
+  "@sshCommandDeleted": {
+    "description": "Translation for sshCommandDeleted"
+  },
+  "sshTerminalAllCopied": "Terminal output copied to clipboard",
+  "@sshTerminalAllCopied": {
+    "description": "Translation for sshTerminalAllCopied"
+  },
+  "sshTerminalMaxCommandsReached": "Maximum of 50 saved commands reached. Delete one to save another.",
+  "@sshTerminalMaxCommandsReached": {
+    "description": "Translation for sshTerminalMaxCommandsReached"
+  },
+  "sshImportCommandsEmpty": "The selected file is empty.",
+  "@sshImportCommandsEmpty": {
+    "description": "Error message when imported JSON file is empty"
+  },
+  "sshImportCommandsNoValid": "No valid SSH commands found in JSON.",
+  "@sshImportCommandsNoValid": {
+    "description": "Warning message when no valid SSH commands were parsed from JSON"
+  },
+  "sshImportCommandsSuccess": "Imported {count} command(s)",
+  "@sshImportCommandsSuccess": {
+    "description": "Toast message when saved SSH commands are imported",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "localNetworkPermissionRequiredAndroid": "Keystone needs local network access. Allow it in Android Settings > Apps > Keystone > Permissions.",
+  "@localNetworkPermissionRequiredAndroid": {
+    "description": "Error message when local network permission is missing on Android"
+  },
+  "localNetworkPermissionRequiredIos": "Keystone needs local network access. Allow it in iOS Settings > Keystone.",
+  "@localNetworkPermissionRequiredIos": {
+    "description": "Error message when local network permission is missing on iOS"
+  }
+}

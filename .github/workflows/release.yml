@@ -1,0 +1,98 @@
+# Copyright (C) 2026 @nightcodex7
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  android:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Check the tag and changelog
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version=$(sed -n 's/^version: *\([^+ ]*\).*/\1/p' pubspec.yaml)
+          if [ "$TAG" != "v$version" ]; then
+            echo "::error::Tag $TAG does not match pubspec version $version"
+            exit 1
+          fi
+          awk -v v="## $version" '/^## /{on=($0==v || index($0, v " ")==1); next} on' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          if ! grep -q '[^[:space:]]' "$RUNNER_TEMP/notes.md"; then
+            echo "::error::CHANGELOG.md has no notes for $version"
+            exit 1
+          fi
+
+      - name: Set Up Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.1'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Tests
+        run: flutter test
+
+      - name: Disable jni GNU build-id
+        run: sed -i -e 's/-Wl,/-Wl,--build-id=none,/' ${PUB_CACHE}/hosted/*/jni-*/src/CMakeLists.txt
+
+      - name: Build APKs
+        env:
+          TAG: ${{ github.ref_name }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Signing secret for $name is not set"
+              exit 1
+            fi
+          done
+          export KEYSTORE_PATH="$RUNNER_TEMP/release.jks"
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          flutter build apk --release --flavor community --split-per-abi
+          flutter build apk --release --flavor community
+          rm "$KEYSTORE_PATH"
+          mkdir dist
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "build/app/outputs/flutter-apk/app-$abi-community-release.apk" \
+              "dist/keystone-$TAG-$abi.apk"
+          done
+          cp build/app/outputs/flutter-apk/app-community-release.apk             "dist/keystone-$TAG-universal.apk"
+
+      - name: Publish release
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1
+        with:
+          tag: ${{ github.ref_name }}
+          name: Keystone ${{ github.ref_name }}
+          bodyFile: ${{ runner.temp }}/notes.md
+          artifacts: dist/*.apk
+          artifactErrorsFailBuild: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          token: ${{ secrets.GITHUB_TOKEN }}

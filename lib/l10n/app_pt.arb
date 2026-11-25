@@ -1,0 +1,480 @@
+{
+  "@@locale": "pt",
+  "appTitle": "Keystone",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "appDescription": "Aplicação de gestão de router OpenWrt",
+  "@appDescription": {
+    "description": "Short description of the application"
+  },
+  "navDashboard": "Dashboard",
+  "@navDashboard": {
+    "description": "Navigation item for the dashboard tab"
+  },
+  "navInterfaces": "Interfaces",
+  "@navInterfaces": {
+    "description": "Navigation item for the interfaces tab"
+  },
+  "navClients": "Clientes",
+  "@navClients": {
+    "description": "Navigation item for the clients tab"
+  },
+  "navMore": "Mais",
+  "@navMore": {
+    "description": "Navigation item for more tools and modules"
+  },
+  "navSettings": "Definições",
+  "@navSettings": {
+    "description": "Navigation item for settings screen"
+  },
+  "actionSave": "Guardar",
+  "@actionSave": {
+    "description": "Generic save button label"
+  },
+  "actionCancel": "Cancelar",
+  "@actionCancel": {
+    "description": "Generic cancel button label"
+  },
+  "actionApply": "Aplicar",
+  "@actionApply": {
+    "description": "Generic apply button label"
+  },
+  "actionDelete": "Apagar",
+  "@actionDelete": {
+    "description": "Generic delete button label"
+  },
+  "actionDismiss": "Dispensar",
+  "@actionDismiss": {
+    "description": "Dismiss button label"
+  },
+  "actionClose": "Fechar",
+  "@actionClose": {
+    "description": "Close dialog or modal label"
+  },
+  "actionRetry": "Tentar novamente",
+  "@actionRetry": {
+    "description": "Retry action label"
+  },
+  "actionExit": "Sair",
+  "@actionExit": {
+    "description": "Exit action label"
+  },
+  "statusConnected": "Ligado",
+  "@statusConnected": {
+    "description": "Connection status connected"
+  },
+  "statusOffline": "Offline",
+  "@statusOffline": {
+    "description": "Network status offline"
+  },
+  "statusError": "Erro",
+  "@statusError": {
+    "description": "Error label"
+  },
+  "settingsTitle": "Definições",
+  "@settingsTitle": {
+    "description": "Title of the settings screen"
+  },
+  "languageTitle": "Idioma",
+  "@languageTitle": {
+    "description": "Language selection setting label"
+  },
+  "languageSystemDefault": "Predefinição do sistema",
+  "@languageSystemDefault": {
+    "description": "Use system language setting"
+  },
+  "diagnosticsSection": "Diagnósticos do router e Funcionalidades",
+  "@diagnosticsSection": {
+    "description": "Diagnostics settings section header"
+  },
+  "loginAuthenticating": "A autenticar...",
+  "@loginAuthenticating": {
+    "description": "Loading message when authentication is in progress"
+  },
+  "loginRequiredField": "Este campo é obrigatório",
+  "@loginRequiredField": {
+    "description": "Validation error for empty required fields"
+  },
+  "firmwareVersion": "Versão de firmware",
+  "@firmwareVersion": {
+    "description": "OpenWrt firmware version label"
+  },
+  "rxRate": "Transferir",
+  "@rxRate": {
+    "description": "Receive / download rate label"
+  },
+  "txRate": "Carregar",
+  "@txRate": {
+    "description": "Transmit / upload rate label"
+  },
+  "ipAddress": "Endereço IP",
+  "@ipAddress": {
+    "description": "IP address column or field label"
+  },
+  "macAddress": "Endereço MAC",
+  "@macAddress": {
+    "description": "MAC hardware address column or field label"
+  },
+  "hostname": "Hostname",
+  "@hostname": {
+    "description": "Device hostname column or field label"
+  },
+  "navWireless": "Sem fios",
+  "@navWireless": {
+    "description": "Navigation item for the wireless management tab"
+  },
+  "colorPalette": "Paleta de cores",
+  "@colorPalette": {
+    "description": "Label for the color palette / theme color selector"
+  },
+  "exitDialogTitle": "Sair da Keystone?",
+  "@exitDialogTitle": {
+    "description": "Title of the exit confirmation dialog"
+  },
+  "exitDialogMessage": "Tem a certeza que deseja sair da aplicação?",
+  "@exitDialogMessage": {
+    "description": "Body text of the exit confirmation dialog"
+  },
+  "termsAndConditionsTitle": "Termos e Condições",
+  "@termsAndConditionsTitle": {
+    "description": "Title for terms & conditions"
+  },
+  "privacyPolicyTitle": "Política de Privacidade",
+  "privacyPolicySubtitle": "Leia a nossa política local sem telemetria",
+  "licenseAttributionTitle": "Licença e Atribuição (GPLv3)",
+  "openSourceLicensesTitle": "Licenças de Código Aberto",
+  "routerSecuritySection": "SEGURANÇA E ACESSO DO ROUTER",
+  "changePasswordSubtitle": "Atualizar palavra-passe de root/admin no router ativo",
+  "rpcPermissionsVerified": "Permissões RPC e módulos de execução verificados",
+  "rpcDialogVerifiedSubtitle": "Os módulos RPC do router e as permissões de execução backend estão verificados e a funcionar corretamente.",
+  "rpcStatusLuciRpc": "Módulos RPC LuCI",
+  "rpcStatusBackendExec": "Permissões de Execução Backend",
+  "rpcStatusUciAccess": "Acesso à Configuração UCI",
+  "rpcManualSetupScript": "Script de Configuração Manual / Verificação",
+  "rpcBtnReverifyRepair": "Voltar a Verificar / Reparar",
+  "loginFailedSession": "Falha ao estabelecer sessão com {target}.",
+  "loginInvalidCredentials": "Falha no início de sessão: credenciais inválidas ou anfitrião inacessível.",
+  "cardQuickActions": "Barra de ações rápidas",
+  "@cardQuickActions": {
+    "description": "Name for quick actions card"
+  },
+  "secDeviceManagement": "Gestão de dispositivos",
+  "@secDeviceManagement": {
+    "description": "Section header on More screen"
+  },
+  "modSystemMonitoringName": "Monitorização do sistema",
+  "@modSystemMonitoringName": {
+    "description": "System monitoring module name"
+  },
+  "modFirewallName": "Firewall e Segurança",
+  "@modFirewallName": {
+    "description": "Firewall module name"
+  },
+  "modServicesName": "Serviços e Sistema",
+  "@modServicesName": {
+    "description": "Services module name"
+  },
+  "modVpnName": "VPN e Conectividade",
+  "@modVpnName": {
+    "description": "VPN module name"
+  },
+  "modPackagesName": "Gestor de Pacotes OPKG/APK",
+  "@modPackagesName": {
+    "description": "Package manager module name"
+  },
+  "modBackupName": "Cópia de Segurança e Flash de Firmware",
+  "@modBackupName": {
+    "description": "Backup & Firmware module name"
+  },
+  "bannedClientsHubTitle": "Centro de clientes banidos",
+  "@bannedClientsHubTitle": {
+    "description": "Title for banner explaining banned and restricted clients section"
+  },
+  "addStaticLeaseTitle": "Adicionar concessão estática",
+  "@addStaticLeaseTitle": {
+    "description": "Title of dialog when adding a new static DHCP lease"
+  },
+  "banClientFromWifi": "Banir cliente do Wi-Fi",
+  "@banClientFromWifi": {
+    "description": "Dialog title for banning a wireless client from Wi-Fi"
+  },
+  "rpcdPermissionDenied": "Permissão negada (ACL do RPCD)",
+  "@rpcdPermissionDenied": {
+    "description": "Title of RPCD access permission denied dialog"
+  },
+  "switchTopologyUnavailable": "Topologia do switch indisponível",
+  "@switchTopologyUnavailable": {
+    "description": "Title when switch topology cannot be probed"
+  },
+  "wirelessOverview": "Visão geral sem fios",
+  "@wirelessOverview": {
+    "description": "Card title for Wireless Overview"
+  },
+  "guestWifiMasterControl": "Controlo principal do Wi-Fi convidado",
+  "@guestWifiMasterControl": {
+    "description": "Title for Master Control Card in Guest Wi-Fi"
+  },
+  "wifiAccessControlTitle": "Controlo de acesso Wi-Fi",
+  "@wifiAccessControlTitle": {
+    "description": "App bar title for Wi-Fi Access Control screen"
+  },
+  "dhcpDnsTitle": "Gestão de DHCP e DNS",
+  "@dhcpDnsTitle": {
+    "description": "App bar title for DHCP & DNS screen"
+  },
+  "firewallTitle": "Firewall e Segurança",
+  "@firewallTitle": {
+    "description": "App bar title for Firewall & Security screen"
+  },
+  "vpnConnectivityTitle": "Conectividade VPN",
+  "@vpnConnectivityTitle": {
+    "description": "App bar title for VPN screen"
+  },
+  "diagNetworkDiagnostics": "Diagnósticos de rede",
+  "@diagNetworkDiagnostics": {
+    "description": "App bar title for Network Diagnostics screen"
+  },
+  "diagSegmentRoutes": "Rotas",
+  "@diagSegmentRoutes": {
+    "description": "Segment tab label for kernel routing table"
+  },
+  "diagSegmentArp": "ARP",
+  "@diagSegmentArp": {
+    "description": "Segment tab label for ARP neighbor table"
+  },
+  "diagSegmentConntrack": "Conexões",
+  "@diagSegmentConntrack": {
+    "description": "Segment tab label for connection tracking table"
+  },
+  "chartingTitle": "Métricas em tempo real",
+  "@chartingTitle": {
+    "description": "Screen title for real-time charting"
+  },
+  "sysMonTitle": "Monitorização do sistema",
+  "@sysMonTitle": {
+    "description": "App bar title for System Monitoring screen"
+  },
+  "storageMonTitle": "Monitorização de armazenamento",
+  "@storageMonTitle": {
+    "description": "App bar title for Storage Monitoring screen"
+  },
+  "pkgCardTitle": "Pacotes OPKG/APK",
+  "@pkgCardTitle": {
+    "description": "Title of OPKG/APK Packages card on dashboard"
+  },
+  "servicesSysTitle": "Serviços e Sistema",
+  "@servicesSysTitle": {
+    "description": "Screen title for Services & System"
+  },
+  "sysUpgradeTitle": "Cópia de segurança / Flash de Firmware",
+  "@sysUpgradeTitle": {
+    "description": "Screen title for Backup / Flash Firmware"
+  },
+  "parentalControlsTitle": "Controlos Parentais",
+  "@parentalControlsTitle": {
+    "description": "Screen title for Parental Controls"
+  },
+  "selectRouter": "Selecionar router",
+  "actionCopyFilePath": "Copiar caminho do ficheiro",
+  "backupCorruptArchive": "Ficheiro corrompido ou inválido",
+  "backupDownloadedSuccess": "Ficheiro de cópia de segurança transferido com sucesso.",
+  "backupFileReadError": "Erro ao ler ficheiro",
+  "backupInvalidArchiveExt": "Extensão de ficheiro inválida",
+  "backupRestoreFailed": "Falha ao restaurar a configuração da cópia de segurança.",
+  "backupRestoredSuccess": "Configuração restaurada com sucesso a partir do ficheiro.",
+  "backupWriteFailed": "Falha ao gravar o ficheiro de cópia de segurança no armazenamento.",
+  "sysUpgradeFactoryResetFailed": "Falha ao restaurar valores de fábrica no router.",
+  "sysUpgradeFactoryResetInitiated": "Restauração de fábrica iniciada. O router está a reiniciar...",
+  "sysUpgradeFlashFailed": "Falha ao gravar o firmware",
+  "sysUpgradeFlashInitiated": "Gravação de firmware iniciada com sucesso. O router está a reiniciar.",
+  "sysUpgradeInvalidFirmwareFormat": "Formato de firmware inválido",
+  "sysUpgradePartitionSaveFailed": "Falha ao gravar o ficheiro de imagem de partição no armazenamento.",
+  "sysUpgradePartitionSaved": "Imagem de partição gravada com sucesso.",
+  "checkForUpdatesSubtitleIpa": "Verificar novas versões beta para iOS no GitHub",
+  "updateAvailableIosBetaTitle": "Atualização beta para iOS disponível",
+  "updateAvailableIosBetaDesc": "Uma nova versão beta para iOS está disponível no GitHub Releases.",
+  "updateRedirectToRelease": "Ver versão",
+  "updateNoBetaReleasesFound": "Nenhuma versão beta para iOS encontrada no GitHub.",
+  "updateUpToDateIosDesc": "Está a executar a versão beta para iOS mais recente do Keystone (v{currentVersion}).",
+  "updateNoBetaUpdateRequired": "A versão beta para iOS mais recente no GitHub é v{latestVersion}. Nenhuma atualização é necessária.",
+  "loginDirectLanBadge": "LIGAÇÃO LAN DIRETA",
+  "loginTargetEndpoint": "DESTINO DO ROUTER",
+  "loginProfileNameOptional": "Nome do Perfil (Opcional)",
+  "loginRouterProfilesHeader": "PERFIS DE ROUTER",
+  "loginManageProfiles": "Gerir",
+  "loginNewRouterChip": "Novo Router",
+  "loginNeedHelp": "Precisa de ajuda?",
+  "cardWiredClients": "Clientes com Fio",
+  "cardWirelessClients": "Clientes sem Fios",
+  "clientsConnectedCount": "{count} Ligados",
+  "cardClientsCount": "{count, plural, =0{0 clientes} =1{1 cliente} other{{count} clientes}}",
+  "cardTapForClients": "Toque para ver clientes",
+  "toastCopiedToClipboard": "Copiado para a área de transferência.",
+  "toastItemCopied": "{label} copiado",
+  "pillGuestNetwork": "Rede de convidados",
+  "statusHidden": "OCULTO",
+  "detectingHardware": "A detetar hardware...",
+  "wifiTechParams": "Parâmetros de interface sem fios",
+  "wifiCopyPassword": "Copiar palavra-passe",
+  "wifiCopyQrPayload": "Copiar dados do QR",
+  "cronSchedulePreset": "Predefinição de agendamento",
+  "cronPresetEvery5Min": "A cada 5 minutos",
+  "cronPresetEvery15Min": "A cada 15 minutos",
+  "cronPresetEveryHour": "A cada hora",
+  "cronPresetEveryDayMidnight": "Todos os dias à meia-noite (00:00)",
+  "cronPresetEveryDay4Am": "Todos os dias às 04:00",
+  "cronPresetEveryWeekdayMidnight": "Dias úteis (Seg-Sex) à meia-noite",
+  "cronPresetEverySundayMidnight": "Todos os domingos à meia-noite",
+  "cronPresetFirstDayMonthMidnight": "Primeiro dia de cada mês à meia-noite",
+  "cronPresetCustomExpression": "Expressão personalizada",
+  "cronChipRebootRouter": "Reiniciar router",
+  "cronChipPingCheck": "Verificação de ping",
+  "cronTaskActiveState": "Estado da tarefa",
+  "cronRunsEveryMinute": "Executa a cada minuto",
+  "cronRunsEveryXMinutes": "Executa a cada {minutes} minutos",
+  "cronRunsEveryXHoursAt": "Executa a cada {hours} horas às :{minutes}",
+  "cronRunsEveryDayAt": "Executa todos os dias às {time}",
+  "cronRunsEverySundayAt": "Executa todos os domingos às {time}",
+  "cronRunsOnWeekdaysAt": "Executa nos dias úteis (Seg-Sex) às {time}",
+  "cronRunsOnDayOfMonthAt": "Executa no dia {day} de cada mês às {time}",
+  "cronRunsOnSchedule": "Executa de acordo com o agendamento ({schedule})",
+  "cronCustomSchedule": "Agendamento personalizado",
+  "rdSettingsQuickActionsSubtitle": "Selecione os botões de ação rápida (Reiniciar, Limpar DNS, Wi-Fi de convidados, VPN, Atualizar) para o painel",
+  "rdSettingsSystemVitalsSubtitle": "Escolha as métricas de desempenho de hardware (CPU, RAM, Média de carga, Tempo de atividade, Temperatura) a exibir",
+  "rdSettingsTrafficSectionTitle": "Definições de tráfego e taxa de transferência",
+  "rdSettingsNetworkPrivacyTitle": "Opções de rede e privacidade",
+  "rdSettingsWirelessNetworksTitle": "Redes sem fios",
+  "rdSettingsWiredInterfacesTitle": "Interfaces com fio e virtuais",
+  "diagMetricWanInterface": "Interface WAN",
+  "@diagMetricWanInterface": {
+    "description": "Metric card label for WAN Interface"
+  },
+  "diagFlushDnsTitle": "Limpar cache DNS",
+  "@diagFlushDnsTitle": {
+    "description": "Card title for flushing DNS cache"
+  },
+  "diagExportCardTitle": "Gerar relatório de diagnóstico",
+  "@diagExportCardTitle": {
+    "description": "Title of diagnostic report export card"
+  },
+  "channelInvalidForCountry": "O canal {channel} não é válido para o país {countryCode}. Canais válidos: {validChannels}",
+  "toastRadioSettingsSuccess": "Definições de rádio aplicadas diretamente ao router.",
+  "toastRadioSettingsFailed": "Falha ao aplicar definições de rádio ao router.",
+  "dialogDisablingActiveRadioTitle": "A desativar rádio ativo",
+  "dialogDisablingActiveRadioMessage": "Desativar o rádio físico \"{radioName}\" desligará todas as redes sem fios nele alojadas e desligará a sua sessão ativa.",
+  "btnProceedAndDisable": "Continuar e desativar",
+  "btnProceedAnyway": "Continuar mesmo assim",
+  "toastSsidUpdateSuccess": "Definições do SSID aplicadas diretamente ao router.",
+  "toastSsidUpdateFailed": "Falha ao atualizar a secção sem fios no UCI.",
+  "backupStatusFetchingPreserved": "A obter lista de ficheiros de cópia de segurança preservados...",
+  "backupStatusGenerating": "A gerar cópia de segurança da configuração no router...",
+  "backupStatusUploadingArchive": "A carregar arquivo para o router...",
+  "backupStatusRestoring": "A restaurar configuração da cópia de segurança...",
+  "backupStatusFactoryReset": "A repor predefinições de fábrica no router...",
+  "backupStatusDumpingPartition": "A extrair imagem da partição ({dev})...",
+  "backupStatusUploadingFirmware": "A carregar imagem de firmware ({size} MB)...",
+  "backupStatusVerifyingFirmware": "A verificar compatibilidade da imagem (sysupgrade -t)...",
+  "backupStatusFlashing": "A executar gravação de sysupgrade no router...",
+  "backupDownloadSuccessTitle": "Cópia de segurança transferida com sucesso",
+  "backupPublicDownloadsFolder": "Pasta pública de transferências",
+  "backupPrivateAppStorage": "Armazenamento privado da aplicação (/Android/data/)",
+  "backupSavedFileLocation": "Localização do ficheiro guardado:",
+  "backupPathLabel": "Caminho da cópia de segurança",
+  "fileSavedSuccessfully": "Ficheiro guardado com sucesso",
+  "filePathLabel": "Caminho do ficheiro",
+  "fileSizePrefix": "Tamanho: {size}",
+  "statusCheckingSpace": "A verificar espaço...",
+  "statusAvailableFallback": "Disponível",
+  "vpnWireguardSectionTitle": "Interfaces e pares WireGuard VPN",
+  "firewallZonesOverviewTitle": "Visão geral das zonas de firewall",
+  "firewallZonesCount": "{count} zonas",
+  "firewallInputPolicy": "Política de entrada",
+  "firewallOutputPolicy": "Política de saída",
+  "firewallForwardPolicy": "Política de reencaminhamento",
+  "servicesSysTestingDdns": "A testar pesquisa e resolução DDNS...",
+  "updateAvailableTitle": "Atualização disponível",
+  "firewallWizardPresetPlex": "Servidor Multimédia Plex",
+  "firewallWizardPresetMinecraft": "Servidor Minecraft",
+  "firewallWizardPresetWebServer": "Servidor Web (HTTP/HTTPS)",
+  "firewallWizardPresetCustom": "Serviço Personalizado",
+  "firewallConflictPortInUse": "Esta porta já está a ser utilizada por outra regra.",
+  "firewallConflictManagementPort": "Esta porta está reservada para administração do router. A exposição externa não é permitida.",
+  "firewallSuccessPortOpened": "A porta {port} está agora aberta para {service} em {device}.",
+  "firewallBlockUnableToDetermineDesc": "O estado de proteção da firewall para esta ligação não pôde ser verificado com segurança. Verifique a configuração do seu router.",
+  "firewallReadOnlyNotice": "Acesso só de leitura: Não é possível aplicar alterações nesta conta do router.",
+  "aghRoutingApiOnly": "Apenas API Acessível",
+  "aghRoutingServiceRunning": "Apenas Serviço em Execução",
+  "aghRoutingForwardingUnverified": "Encaminhamento Não Verificado",
+  "aghRoutingForwardingVerified": "Encaminhamento do Router Verificado",
+  "aghRoutingClientVerified": "Consultas de Clientes Verificadas",
+  "aghRoutingExternalStandalone": "Independente Externo",
+  "aghRoutingMisconfigured": "Encaminhamento Mal Configurado",
+  "aghRoutingUnknown": "Encaminhamento Desconhecido",
+  "aghIpv6NoBypass": "Alinhado / Nenhum Bypass Detetado",
+  "aghIpv6ExternalBypass": "DNS IPv6 Externo Anunciado",
+  "aghIpv6UnsupportedListener": "Sem Escuta IPv6 no AdGuard",
+  "aghIpv6UnableToVerify": "Não foi possível verificar o anúncio IPv6",
+  "aghConfigureRouterDns": "Configurar DNS do Router",
+  "aghReconfigureRouterDns": "Reconfigurar DNS do Router",
+  "aghConfigureDnsTitle": "Configurar Encaminhamento de DNS do Router",
+  "aghConfigureDnsDescription": "Encaminhar consultas DNS upstream do router através do AdGuard Home.",
+  "aghConfigureDnsTarget": "Destino DNS",
+  "aghConfigureDnsChecking": "A verificar configuração de DNS…",
+  "aghConfigureDnsModeExclusive": "Encaminhamento Exclusivo",
+  "aghConfigureDnsModeExclusiveDesc": "Encaminhar todas as consultas DNS do router exclusivamente para o AdGuard Home. (Substitui os upstreams atuais)",
+  "aghConfigureDnsModeExclusiveWarning": "Risco de Falha: Se o AdGuard Home ficar inacessível, a resolução de DNS deixará de funcionar no router e na rede até ser restaurada.",
+  "aghConfigureDnsModeFallback": "Retenção de Recurso (Fallback)",
+  "aghConfigureDnsModeFallbackDesc": "Manter os resolvers existentes como recurso secundário juntamente com o AdGuard Home.",
+  "aghConfigureDnsModeFallbackWarning": "Risco de Bypass: O Dnsmasq pode consultar recursos de fallback simultaneamente ou em pedidos lentos, contornando a filtragem do AdGuard Home.",
+  "aghConfigureDnsRollbackNotice": "Protegido por watchdog de reversão automática do router de 30 segundos.",
+  "aghConfigureDnsApplying": "A aplicar configuração…",
+  "aghConfigureDnsVerifying": "A verificar acessibilidade do router…",
+  "aghConfigureDnsConfirming": "A confirmar alterações…",
+  "aghConfigureDnsSuccess": "Encaminhamento de DNS do router configurado com sucesso.",
+  "aghConfigureDnsRolledBack": "Falha na verificação de acessibilidade do router. O watchdog de reversão de 30 segundos restaurou a configuração anterior.",
+  "aghConfigureDnsAmbiguous": "A configuração foi aplicada, mas a resposta de confirmação foi ambígua. Verifique o estado do router.",
+  "aghConfigureDnsHostnameWarning": "Aviso: O destino é um hostname. Recomenda-se utilizar um IP estático para evitar falhas na resolução de bootstrap.",
+  "aghConfigureDnsLoopError": "Não é possível configurar: Ciclo de encaminhamento detetado onde o upstream do AdGuard aponta de volta para o router.",
+  "aghConfigureDnsConflictError": "Não é possível configurar: Conflito de portas entre o AdGuard e o dnsmasq.",
+  "aghConfigureDnsActionApply": "Aplicar Configuração",
+  "aghConfigureDnsCurrentUpstreams": "Upstreams Atuais",
+  "aghConfigureDnsNewUpstreams": "Novos Upstreams",
+  "aghRevertRouterDns": "Remover reencaminhamento",
+  "aghRevertDnsTitle": "Remover reencaminhamento de DNS do router",
+  "aghRevertDnsDescription": "Remove a regra de reencaminhamento do AdGuard Home do dnsmasq. O dnsmasq deixará de encaminhar pedidos para o AdGuard Home.",
+  "aghRevertDnsRuleToRemove": "Regra a remover",
+  "aghRevertDnsRemainingUpstreams": "Servidores a montante restantes",
+  "aghRevertDnsNoRemainingWarning": "Nenhum resolvedor a montante restante configurado. O dnsmasq recorrerá ao DNS atribuído pelo ISP na interface WAN.",
+  "aghRevertDnsActionRemove": "Remover reencaminhamento",
+  "aghRevertDnsRemoving": "A remover o reencaminhamento de DNS…",
+  "aghRevertDnsSuccess": "Reencaminhamento de DNS do router removido com sucesso.",
+  "aghRevertDnsSuccessTitle": "Reencaminhamento de DNS removido",
+  "aghRevertDnsFailedTitle": "Falha ao remover o reencaminhamento",
+  "aghRevertDnsMissingError": "Nenhuma regra ativa do dnsmasq a apontar para esta instância do AdGuard Home foi encontrada.",
+  "aghRevertDnsAmbiguousError": "Foram encontradas várias regras ambíguas de reencaminhamento a apontar para o AdGuard Home. Verifique as configurações do router no LuCI.",
+  "sysUpgradeDirectRouterDownload": "Instruindo o roteador a baixar o firmware diretamente ({size})...",
+  "sysUpgradeDirectRouterDownloadSuccess": "Firmware baixado diretamente no roteador.",
+  "sysUpgradeFallbackStreaming": "Download direto no roteador indisponível; transferindo imagem do app para o roteador...",
+  "sysUpgradeDownloadingImage": "Baixando OpenWrt {version} ({size})...",
+  "sysUpgradeVerifyingChecksum": "Verificando soma de verificação SHA-256...",
+  "sysUpgradeChecksumMismatch": "Incompatibilidade na soma de verificação SHA-256! Esperado: {expected}, Calculado: {computed}. Atualização cancelada por segurança.",
+  "sysUpgradeTransferringImage": "Transferindo imagem para o roteador ({size} MB)...",
+  "sysUpgradeVerifyingRouterCompatibility": "Verificando compatibilidade no roteador (sysupgrade -t)...",
+  "sysUpgradeValidationFailed": "Falha na verificação pré-gravação do roteador: {reason}. Atualização cancelada.",
+  "sysUpgradeExecutingFlash": "Executando gravação sysupgrade no roteador...",
+  "sysUpgradeRouterNotActive": "A conexão com o roteador não está ativa.",
+  "sysUpgradeUrlNotFound": "URL de download não encontrada para esta atualização.",
+  "dnsmasqReloadTitle": "Recarregar serviço DHCP e DNS",
+  "logViewerTitle": "Logs do Sistema e Kernel",
+  "sshTerminalTitle": "Terminal SSH",
+  "sshCommandSaved": "Comando salvo",
+  "sshCommandDeleted": "Comando excluído",
+  "sshTerminalAllCopied": "Saída do terminal copiada para a área de transferência",
+  "sshTerminalMaxCommandsReached": "Limite de 50 comandos salvos atingido. Exclua um para salvar outro.",
+  "sshImportCommandsEmpty": "O ficheiro selecionado está vazio.",
+  "sshImportCommandsNoValid": "Nenhum comando SSH válido encontrado no JSON.",
+  "sshImportCommandsSuccess": "{count} comando(s) importado(s) com sucesso",
+  "localNetworkPermissionRequiredAndroid": "Permissão de rede local necessária. Permita o acesso em Definições do Android > Aplicações > Keystone > Permissões.",
+  "localNetworkPermissionRequiredIos": "Permissão de rede local necessária. Permita o acesso em Definições do iOS > Keystone."
+}

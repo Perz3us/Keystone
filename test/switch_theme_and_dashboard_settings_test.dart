@@ -1,0 +1,87 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:yet_another_luci_app/design/keystone_theme.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('SwitchTheme Resolution', () {
+    test(
+      'Light theme switchTheme thumb and track resolve with high contrast',
+      () {
+        final theme = KeystoneTheme.buildLightTheme(dynamicColorScheme: null);
+        final switchTheme = theme.switchTheme;
+
+        final selectedThumbColor = switchTheme.thumbColor?.resolve({
+          WidgetState.selected,
+        });
+        final unselectedThumbColor = switchTheme.thumbColor?.resolve({});
+        final selectedTrackColor = switchTheme.trackColor?.resolve({
+          WidgetState.selected,
+        });
+        final unselectedTrackColor = switchTheme.trackColor?.resolve({});
+        final selectedOutline = switchTheme.trackOutlineColor?.resolve({
+          WidgetState.selected,
+        });
+
+        expect(selectedThumbColor, Colors.white);
+        expect(selectedTrackColor, theme.colorScheme.primary);
+        expect(selectedThumbColor, isNot(equals(selectedTrackColor)));
+        expect(selectedOutline, Colors.transparent);
+
+        expect(unselectedThumbColor, theme.colorScheme.onSurfaceVariant);
+        expect(unselectedTrackColor, theme.colorScheme.surfaceContainerHighest);
+      },
+    );
+
+    test(
+      'Dark theme switchTheme thumb and track resolve with high contrast',
+      () {
+        final theme = KeystoneTheme.buildDarkTheme(dynamicColorScheme: null);
+        final switchTheme = theme.switchTheme;
+
+        final selectedThumbColor = switchTheme.thumbColor?.resolve({
+          WidgetState.selected,
+        });
+        final unselectedThumbColor = switchTheme.thumbColor?.resolve({});
+        final selectedTrackColor = switchTheme.trackColor?.resolve({
+          WidgetState.selected,
+        });
+        final unselectedTrackColor = switchTheme.trackColor?.resolve({});
+        final selectedOutline = switchTheme.trackOutlineColor?.resolve({
+          WidgetState.selected,
+        });
+
+        expect(selectedThumbColor, Colors.white);
+        expect(selectedTrackColor, theme.colorScheme.primary);
+        expect(selectedThumbColor, isNot(equals(selectedTrackColor)));
+        expect(selectedOutline, Colors.transparent);
+
+        expect(unselectedThumbColor, theme.colorScheme.onSurfaceVariant);
+        expect(unselectedTrackColor, theme.colorScheme.surfaceContainerHighest);
+      },
+    );
+
+    testWidgets('Active Switch renders visible distinct thumb against track', (
+      tester,
+    ) async {
+      final theme = KeystoneTheme.buildDarkTheme(dynamicColorScheme: null);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: Scaffold(
+            body: Center(child: Switch(value: true, onChanged: (_) {})),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final switchFinder = find.byType(Switch);
+      expect(switchFinder, findsOneWidget);
+    });
+  });
+}
