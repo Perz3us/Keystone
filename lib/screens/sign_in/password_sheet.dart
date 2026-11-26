@@ -26,11 +26,14 @@ Future<void> showPasswordSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
-    builder: (_) => _PasswordSheet(
-      user: user,
-      onSubmit: onSubmit,
-      onChangeUser: onChangeUser,
-      onShowReset: onShowReset,
+    builder: (_) => SafeArea(
+      top: false,
+      child: _PasswordSheet(
+        user: user,
+        onSubmit: onSubmit,
+        onChangeUser: onChangeUser,
+        onShowReset: onShowReset,
+      ),
     ),
   );
 }

@@ -393,21 +393,27 @@ class _DeviceScreenState extends ConsumerState<DeviceScreen> {
     context: context,
     backgroundColor: ks.sheet,
     showDragHandle: true,
-    builder: (_) => Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Why the signal is weak', style: KeystoneType.sheetTitle(ks.tx)),
-          const SizedBox(height: 10),
-          Text(
-            'The device is far from the router, or walls and appliances are '
-            'in the way. Moving either closer, or keeping the router up high '
-            'and out in the open, usually helps.',
-            style: KeystoneType.body(ks.tx2),
-          ),
-        ],
+    builder: (_) => SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Why the signal is weak',
+              style: KeystoneType.sheetTitle(ks.tx),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'The device is far from the router, or walls and appliances are '
+              'in the way. Moving either closer, or keeping the router up high '
+              'and out in the open, usually helps.',
+              style: KeystoneType.body(ks.tx2),
+            ),
+          ],
+        ),
       ),
     ),
   );
