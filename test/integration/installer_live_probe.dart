@@ -17,7 +17,11 @@ class _LiveIo implements RouterIo {
   String _session = '';
   final log = <String>[];
 
-  Future<dynamic> _call(String obj, String method, Map<String, dynamic> p) async {
+  Future<dynamic> _call(
+    String obj,
+    String method,
+    Map<String, dynamic> p,
+  ) async {
     final t = Stopwatch()..start();
     final res = await http.post(
       Uri.parse('http://$host/ubus'),

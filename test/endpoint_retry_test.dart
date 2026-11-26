@@ -2,8 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yet_another_luci_app/services/api_service.dart';
 
-DioException _e(DioExceptionType t) =>
-    DioException(requestOptions: RequestOptions(path: '/ubus'), type: t);
+DioException _e(DioExceptionType t) => DioException(
+  requestOptions: RequestOptions(path: '/ubus'),
+  type: t,
+);
 
 void main() {
   test('a call the router got is never sent again', () {

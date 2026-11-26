@@ -56,8 +56,7 @@ typedef ApiService = RealApiService;
 const _wanZoneSh =
     r'$(. /lib/functions/network.sh; network_find_wan N; Z=$({ fw4 -q network "$N" || fw3 -q network "$N"; } 2>/dev/null); echo "${Z:-wan}")';
 
-bool tryNextEndpoint(DioException e) =>
-    e.type == DioExceptionType.badResponse;
+bool tryNextEndpoint(DioException e) => e.type == DioExceptionType.badResponse;
 
 class RealApiService implements IApiService {
   final HttpClientManager _httpClientManager = HttpClientManager();
