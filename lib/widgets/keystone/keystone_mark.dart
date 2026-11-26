@@ -141,7 +141,11 @@ class _MarkPainter extends CustomPainter {
         band,
         Paint()
           ..shader = const LinearGradient(
-            colors: [Color(0x00FFFFFF), Color(0xFFFFFFFF), Color(0x00FFFFFF)],
+            colors: [
+              Color(0x00F7F9FC),
+              KeystoneColors.paper,
+              Color(0x00F7F9FC),
+            ],
           ).createShader(band),
       );
       canvas.restore();

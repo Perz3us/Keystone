@@ -70,7 +70,7 @@ class _ShareSheetState extends State<_ShareSheet> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: KeystoneColors.paper,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: ks.line),
               ),

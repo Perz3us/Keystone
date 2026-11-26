@@ -30,6 +30,8 @@ class KeystoneColors extends ThemeExtension<KeystoneColors> {
   static const ledRed = Color(0xFFF53E39);
   static const ledBlue = Color(0xFF3F93F7);
   static const ledOff = Color(0xFFC4C8CD);
+  static const paper = Color(0xFFF7F9FC);
+  static const ink = Color(0xFF05070C);
 
   static const light = KeystoneColors(
     bg: Color(0xFFF5F7F9),

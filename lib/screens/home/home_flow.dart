@@ -266,7 +266,7 @@ class _HomeFlowState extends State<HomeFlow>
                       off: ks.line,
                       dot: ks.ac,
                       shadow: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.black.withValues(alpha: .7)
+                          ? KeystoneColors.ink.withValues(alpha: .7)
                           : ks.tx.withValues(alpha: .16),
                       shadowAt: Offset(cx, routerFoot + 1),
                       shadowW: _router * 1.35,

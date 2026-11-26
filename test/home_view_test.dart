@@ -167,17 +167,16 @@ void main() {
 
   testWidgets('data used since the connection came up', (t) async {
     await _pump(t);
-    await t.scrollUntilVisible(find.text('292 MB'), 200);
-    expect(
-      find.text('since the internet came up 15 minutes ago'),
-      findsOneWidget,
+    await t.scrollUntilVisible(
+      find.text('292 MB since the internet came up 15 minutes ago'),
+      200,
     );
     expect(find.text('156 MB down'), findsOneWidget);
     expect(find.text('136 MB up'), findsOneWidget);
     expect(find.text('Averaged 2.6 Mbps'), findsOneWidget);
     final bar = t.getSize(find.byKey(const Key('usage-down')));
     expect(bar.height, 8);
-    expect(bar.width, closeTo((350 - 32 - 2 - 2) * 156 / 292, 2));
+    expect(bar.width, closeTo((350 - 2) * 156 / 292, 2));
   });
 
   testWidgets('shortcuts sit in even columns', (t) async {
@@ -278,7 +277,7 @@ void main() {
     await _pump(t, prefs: const HomePrefs(flow: false, unit: SpeedUnit.mbs));
     expect(find.text('MB/s down'), findsOneWidget);
     expect(find.text('5.4'), findsOneWidget);
-    await t.scrollUntilVisible(find.text('292 MB'), 200);
+    await t.scrollUntilVisible(find.text('Averaged 0.32 MB/s'), 200);
     expect(find.text('Averaged 0.32 MB/s'), findsOneWidget);
   });
 

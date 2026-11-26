@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yet_another_luci_app/design/keystone_tokens.dart';
 import 'package:yet_another_luci_app/design/keystone_theme.dart';
 
 void main() {
@@ -26,7 +27,7 @@ void main() {
           WidgetState.selected,
         });
 
-        expect(selectedThumbColor, Colors.white);
+        expect(selectedThumbColor, KeystoneColors.paper);
         expect(selectedTrackColor, theme.colorScheme.primary);
         expect(selectedThumbColor, isNot(equals(selectedTrackColor)));
         expect(selectedOutline, Colors.transparent);
@@ -54,7 +55,7 @@ void main() {
           WidgetState.selected,
         });
 
-        expect(selectedThumbColor, Colors.white);
+        expect(selectedThumbColor, KeystoneColors.paper);
         expect(selectedTrackColor, theme.colorScheme.primary);
         expect(selectedThumbColor, isNot(equals(selectedTrackColor)));
         expect(selectedOutline, Colors.transparent);

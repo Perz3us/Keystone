@@ -372,74 +372,72 @@ class HomeView extends StatelessWidget {
 
   Widget _usage(KeystoneColors ks, WanUsage u) {
     final downShare = u.total == 0 ? 0.5 : u.down / u.total;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: ks.node,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: ks.line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Data used', style: KeystoneType.secondary(ks.mu)),
-          const SizedBox(height: 4),
-          Text(sizeWords(u.total), style: KeystoneType.title(ks.tx)),
-          Text(
-            'since the internet came up ${onlineFor(u.seconds)} ago',
-            style: KeystoneType.secondary(ks.mu),
-          ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: SizedBox(
-              height: 8,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: (downShare * 1000).round().clamp(1, 999),
-                    child: ColoredBox(
-                      key: const Key('usage-down'),
-                      color: ks.ac,
-                      child: const SizedBox.expand(),
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    flex: ((1 - downShare) * 1000).round().clamp(1, 999),
-                    child: ColoredBox(
-                      color: ks.mu,
-                      child: const SizedBox.expand(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 16,
-            runSpacing: 4,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Data used', style: KeystoneType.bodyStrong(ks.tx)),
+        const SizedBox(height: 6),
+        Text.rich(
+          TextSpan(
             children: [
-              Text(
-                '${sizeWords(u.down)} down',
-                style: KeystoneType.caption(ks.ac),
+              TextSpan(
+                text: sizeWords(u.total),
+                style: KeystoneType.bodyStrong(ks.tx),
               ),
-              Text(
-                '${sizeWords(u.up)} up',
-                style: KeystoneType.caption(ks.tx2),
+              TextSpan(
+                text: ' since the internet came up ${onlineFor(u.seconds)} ago',
               ),
-              if (u.seconds > 0)
-                Text(() {
-                  final mbs = prefs.unit == SpeedUnit.mbs;
-                  final v = mbs ? u.averageMbps / 8 : u.averageMbps;
-                  final n = v.toStringAsFixed(v < 1 ? 2 : 1);
-                  return 'Averaged $n ${mbs ? 'MB/s' : 'Mbps'}';
-                }(), style: KeystoneType.caption(ks.mu)),
             ],
           ),
-        ],
-      ),
+          style: KeystoneType.body(ks.tx2),
+        ),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: SizedBox(
+            height: 8,
+            child: Row(
+              children: [
+                Expanded(
+                  flex: (downShare * 1000).round().clamp(1, 999),
+                  child: ColoredBox(
+                    key: const Key('usage-down'),
+                    color: ks.ac,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Expanded(
+                  flex: ((1 - downShare) * 1000).round().clamp(1, 999),
+                  child: ColoredBox(
+                    color: ks.mu,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 16,
+          runSpacing: 4,
+          children: [
+            Text(
+              '${sizeWords(u.down)} down',
+              style: KeystoneType.caption(ks.ac),
+            ),
+            Text('${sizeWords(u.up)} up', style: KeystoneType.caption(ks.tx2)),
+            if (u.seconds > 0)
+              Text(() {
+                final mbs = prefs.unit == SpeedUnit.mbs;
+                final v = mbs ? u.averageMbps / 8 : u.averageMbps;
+                final n = v.toStringAsFixed(v < 1 ? 2 : 1);
+                return 'Averaged $n ${mbs ? 'MB/s' : 'Mbps'}';
+              }(), style: KeystoneType.caption(ks.mu)),
+          ],
+        ),
+      ],
     );
   }
 
@@ -529,10 +527,10 @@ class _ShortcutButton extends StatelessWidget {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: ks.tint,
+                border: Border.all(color: ks.line),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(s.icon, size: 22, color: ks.tx2),
+              child: Icon(s.icon, size: 22, color: ks.tx),
             ),
             const SizedBox(height: 6),
             Text(

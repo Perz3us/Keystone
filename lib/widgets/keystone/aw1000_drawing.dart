@@ -142,7 +142,7 @@ class _Aw1000Painter extends CustomPainter {
       const Offset(17.2, 112),
       const Offset(82.8, 112),
       Paint()
-        ..color = Colors.white.withValues(alpha: .6)
+        ..color = KeystoneColors.paper.withValues(alpha: .6)
         ..strokeWidth = .5,
     );
 
@@ -167,8 +167,8 @@ class _Aw1000Painter extends CustomPainter {
       _linear(
         bodyRect,
         [
-          Colors.white.withValues(alpha: .5),
-          Colors.white.withValues(alpha: 0),
+          KeystoneColors.paper.withValues(alpha: .5),
+          KeystoneColors.paper.withValues(alpha: 0),
           _ink.withValues(alpha: 0),
           _ink.withValues(alpha: .06),
         ],

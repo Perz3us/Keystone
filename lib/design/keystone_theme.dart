@@ -244,7 +244,7 @@ class KeystoneTheme {
             return colorScheme.onSurface.withValues(alpha: 0.38);
           }
           if (states.contains(WidgetState.selected)) {
-            return isDynamic ? colorScheme.onPrimary : Colors.white;
+            return isDynamic ? colorScheme.onPrimary : KeystoneColors.paper;
           }
           return colorScheme.onSurfaceVariant;
         }),
@@ -643,7 +643,7 @@ class KeystoneTheme {
             return colorScheme.onSurface.withValues(alpha: 0.38);
           }
           if (states.contains(WidgetState.selected)) {
-            return isDynamic ? colorScheme.onPrimary : Colors.white;
+            return isDynamic ? colorScheme.onPrimary : KeystoneColors.paper;
           }
           return colorScheme.onSurfaceVariant;
         }),

@@ -416,29 +416,6 @@ extension PauseDurationExtension on PauseDuration {
   }
 }
 
-const List<String> kProfileIcons = [
-  '👦',
-  '👧',
-  '👶',
-  '🧒',
-  '👩',
-  '👨',
-  '🎮',
-  '📱',
-  '💻',
-  '🖥',
-  '📺',
-  '🎵',
-  '⭐',
-  '🌟',
-  '🏠',
-  '🐱',
-  '🐶',
-  '🐰',
-  '🦁',
-  '🐼',
-];
-
 class ParentalProfile {
   final String id;
   final String name;
@@ -622,7 +599,7 @@ class ParentalProfile {
           fallbackId ??
           '',
       name: json['name']?.toString() ?? 'Profile',
-      icon: json['icon']?.toString() ?? '👦',
+      icon: json['icon']?.toString() ?? '',
       color: json['color']?.toString() ?? '#F97316',
       macAddresses: macs,
       isPaused: isPaused,

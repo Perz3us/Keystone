@@ -91,7 +91,7 @@ class _ParentalEditScreenState extends ConsumerState<ParentalEditScreen> {
     final p = ParentalProfile(
       id: e?.id ?? ParentalControlsStore.generateId(),
       name: _name.text.trim(),
-      icon: e?.icon ?? kProfileIcons.first,
+      icon: e?.icon ?? '',
       color: e?.color ?? '#3B82F6',
       macAddresses: _macs.toList(),
       isPaused: e?.isPaused ?? false,

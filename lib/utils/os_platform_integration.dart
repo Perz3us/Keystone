@@ -4,6 +4,7 @@ import 'dart:async' show unawaited;
 import 'dart:io' show Platform, File, Directory, Process;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:yet_another_luci_app/design/keystone_tokens.dart';
 import 'package:yet_another_luci_app/widgets/keystone/ks_kit.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -496,7 +497,7 @@ class OsPlatformIntegration {
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: accentColor,
-              foregroundColor: Colors.white,
+              foregroundColor: KeystoneColors.paper,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
