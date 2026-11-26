@@ -1002,86 +1002,72 @@ class _LockControlsState extends State<LockControls> {
     final form = GlobalKey<FormState>();
     String? need(String? v) =>
         int.tryParse(v?.trim() ?? '') == null ? 'Enter a number' : null;
-    final ok = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: ks.sheet,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (c) => StatefulBuilder(
-        builder: (c, set) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            20,
-            20,
-            20 + MediaQuery.viewInsetsOf(c).bottom,
-          ),
-          child: Form(
-            key: form,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Lock to a cell', style: KeystoneType.sheetTitle(ks.tx)),
-                const SizedBox(height: 8),
+    final ok = await ksSheet<bool>(
+      context,
+      (c) => StatefulBuilder(
+        builder: (c, set) => Form(
+          key: form,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Lock to a cell', style: KeystoneType.sheetTitle(ks.tx)),
+              const SizedBox(height: 8),
+              Text(
+                _guard == null
+                    ? 'The modem stays on this cell only. If it loses it, '
+                          'the internet stays down until you unlock.'
+                    : "The modem stays on this cell only. If it can't "
+                          'connect or stops working, Cell guard removes the '
+                          'lock.',
+                style: KeystoneType.body(ks.tx2),
+              ),
+              const SizedBox(height: 12),
+              KsChips<bool>(
+                options: const [(false, '4G'), (true, '5G')],
+                selected: nr,
+                onSelected: (v) => set(() => nr = v),
+              ),
+              KsField(
+                label: nr ? 'ARFCN' : 'EARFCN',
+                controller: arfcn,
+                keyboardType: TextInputType.number,
+                validator: need,
+              ),
+              KsField(
+                label: 'PCI',
+                controller: pci,
+                keyboardType: TextInputType.number,
+                validator: need,
+              ),
+              if (nr && needBand) ...[
+                KsField(
+                  label: 'Band',
+                  hint: '78',
+                  controller: band,
+                  keyboardType: TextInputType.number,
+                  validator: need,
+                ),
+                const SizedBox(height: 14),
                 Text(
-                  _guard == null
-                      ? 'The modem stays on this cell only. If it loses it, '
-                            'the internet stays down until you unlock.'
-                      : "The modem stays on this cell only. If it can't "
-                            'connect or stops working, Cell guard removes the '
-                            'lock.',
-                  style: KeystoneType.body(ks.tx2),
+                  'Subcarrier spacing',
+                  style: KeystoneType.secondary(ks.tx2),
                 ),
-                const SizedBox(height: 12),
-                KsChips<bool>(
-                  options: const [(false, '4G'), (true, '5G')],
-                  selected: nr,
-                  onSelected: (v) => set(() => nr = v),
-                ),
-                KsField(
-                  label: nr ? 'ARFCN' : 'EARFCN',
-                  controller: arfcn,
-                  keyboardType: TextInputType.number,
-                  validator: need,
-                ),
-                KsField(
-                  label: 'PCI',
-                  controller: pci,
-                  keyboardType: TextInputType.number,
-                  validator: need,
-                ),
-                if (nr && needBand) ...[
-                  KsField(
-                    label: 'Band',
-                    hint: '78',
-                    controller: band,
-                    keyboardType: TextInputType.number,
-                    validator: need,
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Subcarrier spacing',
-                    style: KeystoneType.secondary(ks.tx2),
-                  ),
-                  const SizedBox(height: 6),
-                  KsChips<String>(
-                    options: const [('0', '15 kHz'), ('1', '30 kHz')],
-                    selected: scs,
-                    onSelected: (v) => set(() => scs = v),
-                  ),
-                ],
-                const SizedBox(height: 20),
-                FilledButton(
-                  onPressed: () {
-                    if (form.currentState!.validate()) Navigator.pop(c, true);
-                  },
-                  child: const Text('Lock'),
+                const SizedBox(height: 6),
+                KsChips<String>(
+                  options: const [('0', '15 kHz'), ('1', '30 kHz')],
+                  selected: scs,
+                  onSelected: (v) => set(() => scs = v),
                 ),
               ],
-            ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: () {
+                  if (form.currentState!.validate()) Navigator.pop(c, true);
+                },
+                child: const Text('Lock'),
+              ),
+            ],
           ),
         ),
       ),
