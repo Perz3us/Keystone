@@ -10,7 +10,6 @@ import 'package:yet_another_luci_app/state/app_state.dart';
 import 'package:yet_another_luci_app/design/keystone_tokens.dart';
 import 'package:yet_another_luci_app/widgets/keystone/ks_kit.dart';
 
-import '../../../utils/http_client_manager.dart';
 import '../../core/luci_module.dart';
 import '../noob_rpc.dart';
 import '../noob_widgets.dart';
@@ -53,60 +52,41 @@ class CellularModule extends LuciModule {
       const CellularScreen();
 }
 
-Future<Map<String, dynamic>> qmodemViaLuci(
+// Older QModem has no ubus object, only a LuCI page that runs this script.
+// The page rejects ubus login sessions with 403, so run the script directly.
+Future<Map<String, dynamic>> qmodemViaScript(
   AppState app,
   String cfg,
   String action, [
   Object? params,
 ]) async {
-  final router = app.selectedRouter;
-  final auth = app.sysauth ?? '';
-  if (router == null || auth.isEmpty) {
-    throw const NoobRpcError('Not logged in to a router');
-  }
-  final uri =
-      Uri.parse(
-        '${router.useHttps ? 'https' : 'http'}://${router.ipAddress}'
-        '/cgi-bin/luci/admin/modem/qmodem/modem_ctrl',
-      ).replace(
-        queryParameters: {
-          'action': action,
-          'cfg': cfg,
-          if (params != null) 'params': jsonEncode(jsonEncode(params)),
-        },
-      );
-  final certs = HttpClientManager();
-  await certs.ensureInitialized();
-  final client = certs.newHttpClient(router.ipAddress);
+  final r = await noobCall(app, 'file', 'exec', {
+    'command': '/bin/sh',
+    'params': [
+      '/usr/share/qmodem/modem_ctrl.sh',
+      action,
+      cfg,
+      if (params != null) jsonEncode(params),
+    ],
+  });
   try {
-    final req = await client.getUrl(uri);
-    req.headers.add(
-      'Cookie',
-      'sysauth=$auth; sysauth_http=$auth; sysauth_https=$auth',
-    );
-    final res = await req.close().timeout(const Duration(seconds: 30));
-    final body = await res.transform(utf8.decoder).join();
-    final data = res.statusCode == 200 ? jsonDecode(body) : null;
+    final data = jsonDecode('${r['stdout'] ?? ''}');
     if (data is Map) return Map<String, dynamic>.from(data);
-    throw NoobRpcError("QModem's LuCI page didn't answer (${res.statusCode})");
-  } on FormatException {
-    throw const NoobRpcError("QModem's LuCI page didn't answer");
-  } finally {
-    client.close(force: true);
-  }
+  } on FormatException catch (_) {}
+  throw const NoobRpcError("QModem didn't answer");
 }
 
 class QmodemSession {
   QmodemSession(this.app);
   final AppState app;
   String? modem;
-  bool _viaLuci = false;
+  bool _viaScript = false;
 
   Future<Map<String, dynamic>> call(
     String method, [
     Map<String, dynamic> extra = const {},
-  ]) => _viaLuci
-      ? qmodemViaLuci(app, modem!, method, extra['params'])
+  ]) => _viaScript
+      ? qmodemViaScript(app, modem!, method, extra['params'])
       : noobCall(app, 'qmodem', method, {'config_section': modem, ...extra});
 
   Future<void> _open() async {
@@ -116,15 +96,15 @@ class QmodemSession {
         .firstOrNull?['.name']
         ?.toString();
     if (modem == null) throw const NoobRpcError('No modem set up');
-    _viaLuci = false;
+    _viaScript = false;
     try {
       await call('cell_info');
     } catch (_) {
-      _viaLuci = true;
+      _viaScript = true;
       try {
         await call('cell_info');
       } catch (_) {
-        _viaLuci = false;
+        _viaScript = false;
         modem = null;
         rethrow;
       }
