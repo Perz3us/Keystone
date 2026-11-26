@@ -56,6 +56,9 @@ typedef ApiService = RealApiService;
 const _wanZoneSh =
     r'$(. /lib/functions/network.sh; network_find_wan N; Z=$({ fw4 -q network "$N" || fw3 -q network "$N"; } 2>/dev/null); echo "${Z:-wan}")';
 
+bool tryNextEndpoint(DioException e) =>
+    e.type == DioExceptionType.badResponse;
+
 class RealApiService implements IApiService {
   final HttpClientManager _httpClientManager = HttpClientManager();
 
@@ -638,7 +641,7 @@ class RealApiService implements IApiService {
           throw Exception('Failed to call RPC: HTTP ${response.statusCode}');
         }
       } on DioException catch (e, stack) {
-        if (i < endpoints.length - 1) {
+        if (i < endpoints.length - 1 && tryNextEndpoint(e)) {
           continue;
         }
         Logger.exception('API call failed', e, stack);

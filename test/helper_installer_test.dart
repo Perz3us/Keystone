@@ -44,7 +44,7 @@ class _Io implements RouterIo {
   final calls = <String>[];
   final writes = <String, List<int>>{};
   String? rc, pid, log, op;
-  int _rcReads = 0, _thrown = 0;
+  int _rcReads = 0, _thrown = 0, checks = 0, reads = 0;
 
   @override
   Future<(int, String)> exec(String cmd, List<String> args) async {
@@ -55,33 +55,56 @@ class _Io implements RouterIo {
       if (reloadThrows) throw 'dropped';
       return (0, '');
     }
-    if (script.contains('command -v apk')) return (apk ? 0 : 1, '');
-    if (script.contains('wc -c')) {
-      final n = writes[args.last]?.length ?? 0;
-      return (0, '${shortWrite ? n - 1 : n}');
+    if (script.contains('alive=1')) {
+      checks++;
+      if (opError) throw 'wifi';
+      return (
+        0,
+        [
+          for (final p in args.skip(3)) ...[
+            '== $p',
+            'op=${op ?? ''}',
+            'rc=${rc ?? ''}',
+            if (pid != null && alive) 'alive=1',
+            if (apk) 'apk=1',
+            'version=${versionFiles['/usr/share/$p/version'] ?? ''}',
+            if (rc != null) ...['---', log ?? ''],
+          ],
+        ].join('\n'),
+      );
     }
-    if (script.contains('kill -0')) return (alive ? 0 : 1, '');
-    if (!script.contains('echo \$r')) {
-      rc = log = pid = op = null;
-      return (0, '');
+    if (script.contains('wc -c') &&
+        shortWrite &&
+        args.last.startsWith('/tmp/')) {
+      return (97, '');
     }
-    rc = log = null;
-    pid = '123';
-    op = RegExp(r'echo (install|remove) >').firstMatch(script)?.group(1);
-    if (never) return (0, '');
-    final arg = args.last;
-    if (arg.startsWith('http')) {
-      if (throwUrl) throw 'boom';
-      rc = failUrl ? '1' : '0';
-      log = failUrl ? urlLog : '';
-    } else if (arg.startsWith('/tmp/')) {
-      rc = failFile ? '1' : '0';
-      log = failFile ? 'Downloading\nbad package\n' : '';
-    } else {
-      rc = '0';
-      log = '';
+    if (script.contains('echo \$r')) {
+      rc = log = null;
+      pid = '123';
+      op = RegExp(r'echo (install|remove) >').firstMatch(script)?.group(1);
+      if (never) return (0, '');
+      final arg = args.last;
+      if (arg.startsWith('http')) {
+        if (throwUrl) throw 'boom';
+        rc = failUrl ? '1' : '0';
+        log = failUrl ? urlLog : '';
+      } else if (arg.startsWith('/tmp/')) {
+        rc = failFile ? '1' : '0';
+        log = failFile ? 'Downloading\nbad package\n' : '';
+      } else {
+        rc = '0';
+        log = '';
+      }
+      return (0, _waitOut());
     }
+    if (script.contains('while [ ! -s')) return (0, _waitOut());
+    rc = log = pid = op = null;
     return (0, '');
+  }
+
+  String _waitOut() {
+    if (never || hide > 0 || readThrows > 0 || readError != null) return '';
+    return rc == null ? '' : 'rc=$rc\n---\n${log ?? ''}';
   }
 
   @override
@@ -95,6 +118,7 @@ class _Io implements RouterIo {
 
   @override
   Future<String?> read(String path) async {
+    reads++;
     if (path.endsWith('/version')) return versionFiles[path];
     if (path.endsWith('.op')) {
       if (opError) throw 'wifi';
@@ -156,6 +180,24 @@ const _reloadCall =
 int _launches(_Io io) => io.calls.where((c) => c.contains('echo \$r')).length;
 
 void main() {
+  test('an add-on install takes three trips to the router', () async {
+    final io = _Io(apk: true);
+    io.versionFiles['/usr/share/keystone-history/version'] = '1.0.0';
+    final history = _make(io, version: () async => '1.0.0');
+    final alerts = _make(io, package: 'keystone-alerts', needs: [history]);
+    await alerts.install();
+    await Future<void>.delayed(Duration.zero);
+    final trips = io.calls
+        .where(
+          (c) =>
+              !c.contains('rpcd reload') &&
+              !(c.startsWith('/bin/sh -c rm -f') && !c.contains('echo')),
+        )
+        .toList();
+    expect(trips, hasLength(3), reason: trips.join(' | '));
+    expect(io.reads, 0);
+  });
+
   test('installs from the phone and never asks the router to fetch', () async {
     final io = _Io(apk: true, failUrl: false);
     await _make(io).install();

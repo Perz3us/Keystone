@@ -19,6 +19,12 @@ class Tower {
   });
 }
 
+bool firmwareSamples(List<Tower> list) {
+  const samples = {'175/400', '175/525', '115/1725'};
+  return list.length == samples.length &&
+      list.every((t) => samples.contains('${t.pci}/${t.earfcn}'));
+}
+
 abstract class UciIo {
   Future<List<Map<String, dynamic>>> sections(String config);
   Future<void> set(String config, String section, Map<String, String> v);
@@ -127,6 +133,13 @@ class PreferredTowers {
 
   Future<void> remove(Tower t) async {
     await _io.delete(_config, t.section);
+    await _io.commit(_config);
+  }
+
+  Future<void> removeAll(List<Tower> list) async {
+    for (final t in list) {
+      await _io.delete(_config, t.section);
+    }
     await _io.commit(_config);
   }
 }

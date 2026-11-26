@@ -71,6 +71,20 @@ const devicesText = AddonText(
       'install it again.',
 );
 
+const cellGuardText = AddonText(
+  name: 'Cell guard',
+  about:
+      'Watches a cell lock. If the locked cell does not connect, is much worse '
+      'than the one before, or stops working later, it removes the lock so '
+      'the router does not stay offline.',
+  aboutNew:
+      'Adds a small service to the router that watches a cell lock and '
+      'removes it if the cell does not connect, is much worse than the one '
+      'before, or stops working later. Signal history is installed with it if '
+      'it is not there yet.',
+  removeBody: 'Locks are no longer watched.',
+);
+
 Future<void> showHelperSheet(
   BuildContext context,
   HelperInstaller helper, {

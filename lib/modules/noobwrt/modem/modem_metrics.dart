@@ -35,7 +35,12 @@ class ModemCarrier {
 
 class ModemMetrics {
   final Map<String, dynamic> raw;
-  const ModemMetrics(this.raw);
+  final int? age;
+  const ModemMetrics(this.raw, {this.age});
+
+  static const staleAfter = 180;
+
+  bool get stale => (age ?? 0) > staleAfter;
 
   String? operator [](String k) => noobValue(raw[k]);
 
@@ -47,7 +52,7 @@ class ModemMetrics {
 
   int? get signalPercent => int.tryParse(this['signal'] ?? '');
 
-  bool get connected => this['ipaddr'] != null;
+  bool get connected => !stale && this['ipaddr'] != null;
 
   List<ModemCarrier> get carriers => [
     if (this['pband'] != null)

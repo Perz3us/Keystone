@@ -14,6 +14,7 @@ import '../../../utils/http_client_manager.dart';
 import '../../core/luci_module.dart';
 import '../noob_rpc.dart';
 import '../noob_widgets.dart';
+import 'cell_guard.dart';
 import 'cellular_data.dart';
 import '../history/helper_sheet.dart';
 import '../modem/modem_actions.dart';
@@ -301,6 +302,7 @@ class _CellularScreenState extends ConsumerState<CellularScreen> {
                 locks: QmodemLocks(_q),
                 nrBand: _carriers.where((c) => c.rat == 'NR').firstOrNull?.band,
                 towers: PreferredTowers(app),
+                guard: CellGuard(app),
               ),
             ],
           ),

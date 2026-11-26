@@ -24,6 +24,7 @@ class Addon {
 List<Addon> addonsFor(AppState app) {
   final alerts = HelperInstaller(app, package: 'keystone-alerts');
   final devices = HelperInstaller(app, package: 'keystone-devices');
+  final guard = HelperInstaller(app, package: 'keystone-cellguard');
   return [
     Addon(
       name: signalHistoryText.name,
@@ -32,7 +33,11 @@ List<Addon> addonsFor(AppState app) {
       open: (c, h) => showHelperSheet(
         c,
         h,
-        dependents: [(alertsText.name, alerts), (devicesText.name, devices)],
+        dependents: [
+          (alertsText.name, alerts),
+          (devicesText.name, devices),
+          (cellGuardText.name, guard),
+        ],
       ),
     ),
     Addon(
@@ -46,6 +51,12 @@ List<Addon> addonsFor(AppState app) {
       about: 'Data each device uses per billing period',
       helper: devices,
       open: (c, h) => showHelperSheet(c, h, text: devicesText),
+    ),
+    Addon(
+      name: cellGuardText.name,
+      about: 'Removes a cell lock that leaves the router offline',
+      helper: guard,
+      open: (c, h) => showHelperSheet(c, h, text: cellGuardText),
     ),
   ];
 }

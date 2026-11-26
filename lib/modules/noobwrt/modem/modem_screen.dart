@@ -11,6 +11,7 @@ import 'package:yet_another_luci_app/widgets/keystone/ks_kit.dart';
 
 import '../noob_rpc.dart';
 import '../noob_widgets.dart';
+import '../cellular/cell_guard.dart';
 import '../cellular/cellular_data.dart';
 import '../cellular/lock_controls.dart';
 import '../cellular/preferred_towers.dart';
@@ -32,12 +33,27 @@ Future<List<String>> listModemMetrics(WidgetRef ref) async {
     ..sort();
 }
 
+const _ageSh = r'''t=$(cat "${1%.json}.stamp" 2>/dev/null)
+case "$t" in ''|*[!0-9]*) ;; *) echo $(( $(cut -d. -f1 /proc/uptime) - t )) ;; esac''';
+
+Future<int?> _metricsAge(AppState app, String path) async {
+  try {
+    final r = await noobCall(app, 'file', 'exec', {
+      'command': '/bin/sh',
+      'params': ['-c', _ageSh, 'sh', path],
+    });
+    return int.tryParse('${r['stdout'] ?? ''}'.trim());
+  } catch (_) {
+    return null;
+  }
+}
+
 Future<ModemMetrics> readModemMetrics(WidgetRef ref, String file) async {
-  final data = await noobReadJson(
-    ref.read(appStateProvider),
-    '$_metricsDir/$file',
-  );
-  return ModemMetrics(data);
+  final app = ref.read(appStateProvider);
+  final path = '$_metricsDir/$file';
+  final age = _metricsAge(app, path);
+  final data = await noobReadJson(app, path);
+  return ModemMetrics(data, age: await age);
 }
 
 class ModemScreen extends ConsumerStatefulWidget {
@@ -258,6 +274,7 @@ class _ModemScreenState extends ConsumerState<ModemScreen> {
       locks: _locks,
       nearby: FiveGBands.nearby(m.raw['neighbors']),
       towers: PreferredTowers(app),
+      guard: CellGuard(app),
     ),
   ];
 
@@ -300,17 +317,20 @@ class _ModemScreenState extends ConsumerState<ModemScreen> {
 
   Widget _summary(ModemMetrics m) {
     final ks = context.ks;
-    final pct = m.signalPercent;
-    final line = [
-      switch (m.rsrpQuality) {
-        SignalQuality.excellent => 'Excellent signal',
-        SignalQuality.good => 'Good signal',
-        SignalQuality.fair => 'Fair signal',
-        SignalQuality.poor => 'Weak signal',
-        SignalQuality.unknown => null,
-      },
-      m.connected ? connectedFor(m['conn_time_sec']) : 'not connected',
-    ].nonNulls.join(' · ');
+    final pct = m.stale ? null : m.signalPercent;
+    final line = m.stale
+        ? 'No reading for ${((m.age ?? 0) / 60).floor()} min. It may have lost '
+              'its signal or need a restart.'
+        : [
+            switch (m.rsrpQuality) {
+              SignalQuality.excellent => 'Excellent signal',
+              SignalQuality.good => 'Good signal',
+              SignalQuality.fair => 'Fair signal',
+              SignalQuality.poor => 'Weak signal',
+              SignalQuality.unknown => null,
+            },
+            m.connected ? connectedFor(m['conn_time_sec']) : 'not connected',
+          ].nonNulls.join(' · ');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -320,10 +340,12 @@ class _ModemScreenState extends ConsumerState<ModemScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                [
-                  m['operator_name'] ?? 'Mobile network',
-                  m['mode']?.split('|').first.trim() ?? 'No service',
-                ].join(' · '),
+                m.stale
+                    ? "The modem isn't answering"
+                    : [
+                        m['operator_name'] ?? 'Mobile network',
+                        m['mode']?.split('|').first.trim() ?? 'No service',
+                      ].join(' · '),
                 style: KeystoneType.bodyStrong(ks.tx),
               ),
             ),

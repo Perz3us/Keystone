@@ -8,6 +8,8 @@ class NoobRpcError implements Exception {
   final String message;
   const NoobRpcError(this.message);
 
+  static const slow = NoobRpcError('the router took too long to answer');
+
   static const refused = NoobRpcError(
     'the router refused. Sign out and back in; if it keeps happening, '
     "this login isn't allowed to change it.",
@@ -55,6 +57,7 @@ Future<Map<String, dynamic>> noobCall(
     }
     if (text.contains('object not found')) throw NoobRpcError(_ubusErrors[4]!);
     if (text.contains('method not found')) throw NoobRpcError(_ubusErrors[3]!);
+    if (text.contains('timeout')) throw NoobRpcError.slow;
     rethrow;
   }
   if (res is List && res.isNotEmpty) {

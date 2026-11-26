@@ -105,6 +105,8 @@ void main() {
       ((await fail('Method not found')) as NoobRpcError).message,
       'Method not found',
     );
-    expect(await fail('Timeout'), isNot(isA<NoobRpcError>()));
+    final slow = await fail('Timeout');
+    expect(slow, same(NoobRpcError.slow));
+    expect(keystoneMissing(slow), isFalse);
   });
 }

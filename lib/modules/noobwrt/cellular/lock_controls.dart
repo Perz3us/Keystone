@@ -7,11 +7,83 @@ import 'package:yet_another_luci_app/design/keystone_tokens.dart';
 import 'package:yet_another_luci_app/state/app_state.dart';
 import 'package:yet_another_luci_app/widgets/keystone/ks_kit.dart';
 
+import '../history/helper_sheet.dart';
 import '../modem/modem_controls.dart';
 import '../noob_rpc.dart';
 import '../noob_widgets.dart';
+import 'cell_guard.dart';
 import 'cellular_data.dart';
 import 'preferred_towers.dart';
+
+class LockPending implements Exception {
+  const LockPending();
+}
+
+const lockPartnersSh = r'''partners() {
+  s=$(uci -q show 5gmodem | sed -n "s/^5gmodem\.\([^.]*\)\.active_modem='\{0,1\}\([^']*\)'\{0,1\}$/\1 \2/p" | head -n 1)
+  [ -n "$s" ] || return 0
+  m=m_$(printf '%s' "${s#* }" | sed 's/[^A-Za-z0-9]/_/g')
+  s=${s%% *}
+  port=$(uci -q get "5gmodem.$m.at_port" || uci -q get "5gmodem.$s.at_port" || uci -q get "5gmodem.$s.device")
+  [ -n "$port" ] || return 0
+  c=$(cat "/etc/auto-pci-cell/ca_$1_$2" 2>/dev/null)
+  case $c in *[!0-9,]*) c= ;; esac
+  [ -n "$c" ] || c=$(/usr/share/5gmodem/atcmd.sh "$port" AT+QCAINFO 2>/dev/null | tr -d '\r" ' | awk -F, -v e="$1" -v q="$2" '
+    /^\+QCAINFO:PCC,/ { on = ($2 == e && $6 == q) }
+    /^\+QCAINFO:SCC,/ && on && $4 ~ /^LTEBAND/ && $2 ~ /^[0-9]+$/ && $6 ~ /^[0-9]+$/ && !($2 == e && $6 == q) && !seen[$2 "," $6]++ { o = o (o == "" ? "" : ",") $2 "," $6 }
+    END { print o }')
+  c=$(printf '%s' "$c" | cut -d, -f1-18)
+  [ -n "$c" ] && echo "$port $(( ($(printf '%s' "$c" | tr -cd , | wc -c) + 1) / 2 + 1 )),$1,$2,$c"
+}
+''';
+
+const _lockSh =
+    '$lockPartnersSh'
+    r'''rc=/tmp/keystone-celllock.rc
+out=/tmp/keystone-celllock.out
+job=/tmp/keystone-celllock.job
+rm -f "$rc" "$out"
+echo $$ >"$job"
+me=$$
+( ca=
+  [ "$1 $2" = "setcelllock cell" ] && ca=$(partners "$3" "$4")
+  n=0
+  while :; do
+    /usr/share/5gmodem/bands.sh "$@" >"$out" 2>&1
+    r=$?
+    [ "$r" = 0 ] || [ $n -ge 3 ] || ! grep -qi busy "$out" && break
+    sleep 5
+    [ "$(cat "$job" 2>/dev/null)" = "$me" ] || exit 0
+    n=$((n+1))
+  done
+  [ "$1 $2" = "setcelllock off" ] &&
+    /usr/share/5gmodem/bands.sh setcelllock5g off >/dev/null 2>&1
+  [ "$(cat "$job" 2>/dev/null)" = "$me" ] || exit 0
+  echo $r >"$rc"
+  [ "$r" = 0 ] && [ -n "$ca" ] || exit 0
+  j=0
+  while [ $j -lt 6 ] && [ "$(cat "$job" 2>/dev/null)" = "$me" ]; do
+    sleep 5
+    if /usr/share/5gmodem/atcmd.sh "${ca%% *}" AT+QCAINFO 2>/dev/null | tr -d '\r" ' |
+      grep -q "^+QCAINFO:PCC,$3,[^,]*,[^,]*,[^,]*,$4,"; then
+      [ "$(cat "$job" 2>/dev/null)" = "$me" ] &&
+        /usr/share/5gmodem/atcmd.sh "${ca%% *}" "AT+QNWLOCK=\"common/4g\",${ca#* }" >/dev/null 2>&1
+      break
+    fi
+    j=$((j+1))
+  done ) </dev/null >/dev/null 2>&1 &
+i=0
+while [ ! -s "$rc" ] && [ $i -lt 5 ]; do sleep 1; i=$((i+1)); done
+[ -s "$rc" ] && { echo "rc=$(cat "$rc")"; cat "$out"; }
+true''';
+
+String? lockResult(String out) {
+  final m = RegExp(r'^rc=(\d+)\s*').firstMatch(out);
+  if (m == null) throw const LockPending();
+  if (m[1] == '0') return null;
+  final said = out.substring(m.end).trim();
+  return said.isEmpty ? 'Error ${m[1]}' : said;
+}
 
 abstract class ModemLocks {
   Future<List<BandClass>> bands();
@@ -214,6 +286,21 @@ class FiveGModemLocks implements ModemLocks {
     return out;
   }
 
+  Future<void> _change(List<String> args) async {
+    final Map<String, dynamic> r;
+    try {
+      r = await noobCall(app, 'file', 'exec', {
+        'command': '/bin/sh',
+        'params': ['-c', _lockSh, 'sh', ...args],
+      });
+    } on NoobRpcError catch (e) {
+      if (identical(e, NoobRpcError.slow)) throw const LockPending();
+      rethrow;
+    }
+    final err = lockResult('${r['stdout'] ?? ''}'.trim());
+    if (err != null) throw NoobRpcError(err);
+  }
+
   Future<Map<String, dynamic>> _read() async => _json ??= await _fresh();
 
   // Plain `json` may be five minutes old; older scripts have no `jsonrefresh`.
@@ -309,23 +396,70 @@ class FiveGModemLocks implements ModemLocks {
   }) async {
     _json = null;
     if (pci.isEmpty) {
-      // Sent without reading first: a modem that lost its cell may not answer.
       try {
-        await _run(['setcelllock', 'off']);
+        await _change(['setcelllock', 'off']);
+      } on LockPending {
+        rethrow;
       } on NoobRpcError catch (_) {
         if (!await _unlockByAt()) rethrow;
-        return;
-      } finally {
-        try {
-          await _run(['setcelllock5g', 'off']);
-        } on NoobRpcError catch (_) {
-          // Older scripts have no 5G lock to clear.
-        }
       }
       return;
     }
-    await _run([nr ? 'setcelllock5g' : 'setcelllock', 'cell', arfcn, pci]);
+    await _change([nr ? 'setcelllock5g' : 'setcelllock', 'cell', arfcn, pci]);
   }
+}
+
+bool canSee(
+  List<NearbyCell> cells, {
+  required bool nr,
+  required String pci,
+  required String arfcn,
+}) {
+  if (cells.isEmpty) return true;
+  final p = int.tryParse(pci.trim()), a = int.tryParse(arfcn.trim());
+  return cells.any(
+    (c) =>
+        (c.rat == 'NR') == nr &&
+        int.tryParse(c.pci) == p &&
+        int.tryParse(c.arfcn) == a,
+  );
+}
+
+Future<void> guardedLock(
+  ModemLocks locks,
+  CellGuard? guard, {
+  required bool nr,
+  String pci = '',
+  String arfcn = '',
+  String band = '',
+  String scs = '',
+}) async {
+  final on = pci.isNotEmpty;
+  var armed = false;
+  if (on && guard != null) {
+    try {
+      await guard.arm(nr: nr, pci: pci, arfcn: arfcn);
+      armed = true;
+    } on NoobRpcError catch (e) {
+      armed = identical(e, NoobRpcError.slow);
+    } catch (_) {}
+  }
+  Future<void> disarm() async {
+    try {
+      await guard?.disarm();
+    } catch (_) {}
+  }
+
+  try {
+    await locks.setLock(nr: nr, pci: pci, arfcn: arfcn, band: band, scs: scs);
+  } on LockPending {
+    if (!on) await disarm();
+    rethrow;
+  } catch (_) {
+    if (armed) await disarm();
+    rethrow;
+  }
+  if (!on) await disarm();
 }
 
 bool _unsupported(Object e) =>
@@ -346,9 +480,12 @@ class LockControls extends StatefulWidget {
     this.nearby,
     this.nrBand,
     this.towers,
+    this.guard,
   });
 
   final ModemLocks locks;
+
+  final CellGuard? guard;
 
   final List<NearbyCell>? nearby;
 
@@ -369,6 +506,8 @@ class _LockControlsState extends State<LockControls> {
   bool _loaded = false;
   bool _busy = false;
   bool _lockFailed = false;
+  GuardState? _guard;
+  bool _guardKnown = false;
   Timer? _refresh;
   int _generation = 0;
 
@@ -384,7 +523,22 @@ class _LockControlsState extends State<LockControls> {
     super.dispose();
   }
 
+  Future<void> _readGuard() async {
+    final g = widget.guard;
+    if (g == null) return;
+    try {
+      final st = await g.info();
+      if (mounted) {
+        setState(() {
+          _guard = st;
+          _guardKnown = true;
+        });
+      }
+    } catch (_) {}
+  }
+
   Future<void> _load() async {
+    unawaited(_readGuard());
     await _loadTowers();
     if (mounted) await _readModem(5);
   }
@@ -403,6 +557,7 @@ class _LockControlsState extends State<LockControls> {
   Future<void> _readModem(int tries, [bool? want]) async {
     final mine = ++_generation;
     bool stale() => !mounted || mine != _generation;
+    unawaited(_readGuard());
     CellLock? lock;
     var failed = false;
     try {
@@ -444,6 +599,14 @@ class _LockControlsState extends State<LockControls> {
       await action();
       ok = true;
       if (mounted) ksSay(context, what);
+    } on LockPending {
+      ok = true;
+      if (mounted) {
+        ksSay(
+          context,
+          'Sent. The modem is busy, so it can take a minute to change.',
+        );
+      }
     } catch (e) {
       if (mounted) ksSay(context, "The modem didn't take that: $e");
     }
@@ -481,7 +644,9 @@ class _LockControlsState extends State<LockControls> {
     String scs = '',
   }) => _do(
     pci.isEmpty ? 'Cell lock removed.' : 'Locked to PCI $pci.',
-    () => widget.locks.setLock(
+    () => guardedLock(
+      widget.locks,
+      _guard == null ? null : widget.guard,
       nr: nr,
       pci: pci,
       arfcn: arfcn,
@@ -506,7 +671,7 @@ class _LockControlsState extends State<LockControls> {
   @override
   Widget build(BuildContext context) {
     final lock = _lock;
-    final nearby = widget.nearby ?? lock?.nearby ?? const [];
+    final nearby = _nearby;
     if (!_loaded) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 24),
@@ -541,9 +706,28 @@ class _LockControlsState extends State<LockControls> {
                 NoobRow('4G', lock.lte ?? 'Not locked'),
                 NoobRow('5G', lock.nr ?? 'Not locked'),
               ],
+              if (_guard?.line case final l?) NoobRow('Cell guard', l),
               if (_lockFailed)
                 const KsNote(
                   "The modem isn't answering. You can still unlock it.",
+                ),
+              if (_guard?.last case final e?)
+                KsNote(
+                  e.text,
+                  action: 'OK',
+                  onAction: () async {
+                    try {
+                      final st = await widget.guard!.ack();
+                      if (mounted) setState(() => _guard = st);
+                    } catch (_) {}
+                  },
+                ),
+              if (_guardKnown && _guard == null)
+                KsNote(
+                  'Add Cell guard so a lock that leaves the router offline '
+                  'removes itself.',
+                  action: 'Add',
+                  onAction: _addGuard,
                 ),
               if (_towers != null) ..._towerRows(_towers!),
               const SizedBox(height: 12),
@@ -575,14 +759,8 @@ class _LockControlsState extends State<LockControls> {
             children: [
               for (final c in nearby)
                 KsRow(
-                  title:
-                      '${c.rat == 'NR' ? '5G' : '4G'} PCI ${c.pci} · '
-                      '${c.rat == 'NR' ? 'ARFCN' : 'EARFCN'} ${c.arfcn}'
-                      '${c.serving ? ' (serving)' : ''}',
-                  subtitle: [
-                    if (c.rsrp != null) 'RSRP ${c.rsrp} dBm',
-                    if (c.rsrq != null) 'RSRQ ${c.rsrq} dB',
-                  ].join('  '),
+                  title: _cellTitle(c),
+                  subtitle: _cellLine(c),
                   onTap:
                       _busy ||
                           !(lock != null || (_towers != null && c.rat != 'NR'))
@@ -594,6 +772,23 @@ class _LockControlsState extends State<LockControls> {
       ],
     );
   }
+
+  Future<void> _addGuard() async {
+    await showHelperSheet(context, widget.guard!.helper, text: cellGuardText);
+    await _readGuard();
+  }
+
+  List<NearbyCell> get _nearby => widget.nearby ?? _lock?.nearby ?? const [];
+
+  String _cellTitle(NearbyCell c) =>
+      '${c.rat == 'NR' ? '5G' : '4G'} PCI ${c.pci} · '
+      '${c.rat == 'NR' ? 'ARFCN' : 'EARFCN'} ${c.arfcn}'
+      '${c.serving ? ' (serving)' : ''}';
+
+  String _cellLine(NearbyCell c) => [
+    if (c.rsrp != null) 'RSRP ${c.rsrp} dBm',
+    if (c.rsrq != null) 'RSRQ ${c.rsrq} dB',
+  ].join('  ');
 
   List<Widget> _bandClass(BandClass c) {
     final picked = _picked[c.id] ?? c.locked;
@@ -683,11 +878,26 @@ class _LockControlsState extends State<LockControls> {
           if (mounted) {
             await _do(
               v ? 'Preferred towers on.' : 'Preferred towers off.',
-              () => widget.towers!.setOn(v),
+              () async {
+                await widget.towers!.setOn(v);
+                if (v && _guard != null) {
+                  try {
+                    await widget.guard?.disarm();
+                  } catch (_) {}
+                }
+              },
             );
           }
         },
       ),
+      if (firmwareSamples(t.$2))
+        KsNote(
+          'These three came with the firmware as examples. They are not '
+          'towers near you.',
+          action: _busy ? null : 'Remove them',
+          onAction: () =>
+              _do('Examples removed.', () => widget.towers!.removeAll(t.$2)),
+        ),
       for (final w in t.$2)
         KsRow(
           title: 'PCI ${w.pci} · EARFCN ${w.earfcn}',
@@ -747,6 +957,31 @@ class _LockControlsState extends State<LockControls> {
       if (!ok || !mounted) return;
       await _do('Preferred towers off.', () => widget.towers!.setOn(false));
       if (!mounted || _towers?.$1 == true) return;
+    }
+    final cells = _nearby;
+    if (from == null && cells.isNotEmpty) {
+      final pick = await ksSheet<Object>(
+        context,
+        (b) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const KsSection('Cells your modem can see'),
+            for (final c in cells)
+              KsRow(
+                title: _cellTitle(c),
+                subtitle: _cellLine(c),
+                onTap: () => Navigator.pop(b, c),
+              ),
+            KsRow(
+              title: 'Enter numbers yourself',
+              onTap: () => Navigator.pop(b, false),
+            ),
+          ],
+        ),
+      );
+      if (pick == null || !mounted) return;
+      if (pick is NearbyCell) from = pick;
     }
     await _lockSheet(from);
   }
@@ -827,8 +1062,12 @@ class _LockControlsState extends State<LockControls> {
                 Text('Lock to a cell', style: KeystoneType.sheetTitle(ks.tx)),
                 const SizedBox(height: 8),
                 Text(
-                  'The modem stays on this cell only. If it loses it, the '
-                  'internet stays down until you unlock.',
+                  _guard == null
+                      ? 'The modem stays on this cell only. If it loses it, '
+                            'the internet stays down until you unlock.'
+                      : "The modem stays on this cell only. If it can't "
+                            'connect or stops working, Cell guard removes the '
+                            'lock.',
                   style: KeystoneType.body(ks.tx2),
                 ),
                 const SizedBox(height: 12),
@@ -838,14 +1077,14 @@ class _LockControlsState extends State<LockControls> {
                   onSelected: (v) => set(() => nr = v),
                 ),
                 KsField(
-                  label: 'PCI',
-                  controller: pci,
+                  label: nr ? 'ARFCN' : 'EARFCN',
+                  controller: arfcn,
                   keyboardType: TextInputType.number,
                   validator: need,
                 ),
                 KsField(
-                  label: nr ? 'ARFCN' : 'EARFCN',
-                  controller: arfcn,
+                  label: 'PCI',
+                  controller: pci,
                   keyboardType: TextInputType.number,
                   validator: need,
                 ),
@@ -882,7 +1121,20 @@ class _LockControlsState extends State<LockControls> {
         ),
       ),
     );
-    if (ok == true) {
+    if (ok == true && mounted) {
+      final seen = canSee(_nearby, nr: nr, pci: pci.text, arfcn: arfcn.text);
+      if (!seen &&
+          !await ksConfirm(
+            context,
+            title: "Your modem can't see this cell right now",
+            body:
+                'Check the ${nr ? 'ARFCN' : 'EARFCN'} and PCI. If the modem '
+                "can't find this cell, the internet stays down until the "
+                'lock is removed.',
+            action: 'Lock anyway',
+          )) {
+        return;
+      }
       await _setLock(
         nr: nr,
         pci: pci.text.trim(),

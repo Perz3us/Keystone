@@ -433,25 +433,12 @@ class _MainScreenState extends ConsumerState<MainScreen>
                                 label: Text(l10n?.navDashboard ?? 'Home'),
                               ),
                               NavigationRailDestination(
-                                icon: Builder(
-                                  builder: (context) {
-                                    final connectedCount = appState.clients
-                                        .where((c) => c.isConnected)
-                                        .length;
-                                    return Badge(
-                                      isLabelVisible: connectedCount > 0,
-                                      label: Text(
-                                        connectedCount > 99
-                                            ? '99+'
-                                            : '$connectedCount',
-                                      ),
-                                      child: const Icon(
-                                        Icons.devices_other_outlined,
-                                      ),
-                                    );
-                                  },
+                                icon: _countBadge(
+                                  appState,
+                                  Icons.devices_other_outlined,
                                 ),
-                                selectedIcon: const Icon(
+                                selectedIcon: _countBadge(
+                                  appState,
                                   Icons.devices_other_rounded,
                                 ),
                                 label: Text(l10n?.navClients ?? 'Devices'),
@@ -462,9 +449,11 @@ class _MainScreenState extends ConsumerState<MainScreen>
                                 label: Text(l10n?.navWireless ?? 'Wi-Fi'),
                               ),
                               NavigationRailDestination(
-                                icon: const Icon(Icons.grid_view_outlined),
-                                selectedIcon: const Icon(
-                                  Icons.grid_view_rounded,
+                                icon: _updateDot(
+                                  const Icon(Icons.grid_view_outlined),
+                                ),
+                                selectedIcon: _updateDot(
+                                  const Icon(Icons.grid_view_rounded),
                                 ),
                                 label: Text(l10n?.navMore ?? 'More'),
                               ),
@@ -485,6 +474,31 @@ class _MainScreenState extends ConsumerState<MainScreen>
             ),
     );
   }
+
+  Widget _countBadge(AppState app, IconData icon) {
+    final n = app.clients.where((c) => c.isConnected).length;
+    return Badge(
+      isLabelVisible: n > 0,
+      label: Text(n > 99 ? '99+' : '$n'),
+      child: Icon(icon),
+    );
+  }
+
+  Widget _updateDot(Widget icon) => ListenableBuilder(
+    listenable: Listenable.merge([
+      AppUpdateChecker.instance.available,
+      addonUpdates,
+    ]),
+    builder: (context, child) => Badge(
+      isLabelVisible:
+          AppUpdateChecker.instance.available.value != null ||
+          addonUpdatesFor(_appState?.selectedRouter?.id) > 0,
+      smallSize: 7,
+      backgroundColor: context.ks.ac,
+      child: child,
+    ),
+    child: icon,
+  );
 
   static const _dockTabs = [0, 2, 3, 4];
 
@@ -579,27 +593,14 @@ class _MainScreenState extends ConsumerState<MainScreen>
                   curve: const Cubic(0.25, 1, 0.5, 1),
                   width: 52,
                   height: 28,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: selected ? ks.acSoft : Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: index == 4
-                      ? ListenableBuilder(
-                          listenable: Listenable.merge([
-                            AppUpdateChecker.instance.available,
-                            addonUpdates,
-                          ]),
-                          builder: (_, child) => Badge(
-                            isLabelVisible:
-                                AppUpdateChecker.instance.available.value !=
-                                    null ||
-                                addonUpdatesFor(_appState?.selectedRouter?.id) >
-                                    0,
-                            smallSize: 7,
-                            backgroundColor: ks.ac,
-                            child: child,
-                          ),
-                          child: Icon(
+                      ? _updateDot(
+                          Icon(
                             selected ? selectedIcon : icon,
                             color: color,
                             size: 20,

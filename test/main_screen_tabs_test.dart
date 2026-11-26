@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yet_another_luci_app/screens/devices/devices_view.dart';
 import 'package:yet_another_luci_app/screens/home/home_view.dart';
 import 'package:yet_another_luci_app/screens/main_screen.dart';
+import 'package:yet_another_luci_app/services/app_update.dart';
 import 'package:yet_another_luci_app/state/app_state.dart';
 
 void main() {
@@ -19,8 +20,12 @@ void main() {
     app.markReviewerNoticeShown();
   });
 
-  Future<void> pump(WidgetTester t, {int tab = 0}) async {
-    t.view.physicalSize = const Size(390, 844);
+  Future<void> pump(
+    WidgetTester t, {
+    int tab = 0,
+    Size size = const Size(390, 844),
+  }) async {
+    t.view.physicalSize = size;
     t.view.devicePixelRatio = 1;
     addTearDown(t.view.reset);
     await t.pumpWidget(
@@ -71,5 +76,37 @@ void main() {
     await t.fling(find.byType(DevicesView), const Offset(300, 0), 1500);
     await t.pump(const Duration(seconds: 1));
     expect(find.byType(HomeView), findsOneWidget);
+  });
+
+  group('with an update waiting', () {
+    setUp(
+      () => AppUpdateChecker.instance.available.value = const AppUpdate(
+        version: '9.9.9',
+        url: '',
+      ),
+    );
+    tearDown(() => AppUpdateChecker.instance.available.value = null);
+
+    testWidgets('the More icon stays in the middle of its pill', (t) async {
+      await pump(t, tab: 4);
+      final icon = find.byIcon(Icons.grid_view_rounded);
+      final pill = find.ancestor(
+        of: icon,
+        matching: find.byType(AnimatedContainer),
+      );
+      expect(find.byType(Badge), findsWidgets);
+      expect(t.getCenter(icon).dx, closeTo(t.getCenter(pill.first).dx, 0.5));
+      expect(t.getCenter(icon).dy, closeTo(t.getCenter(pill.first).dy, 0.5));
+    });
+
+    testWidgets('a wide screen shows the dot on More too', (t) async {
+      await pump(t, size: const Size(1200, 800));
+      final more = find.ancestor(
+        of: find.byIcon(Icons.grid_view_outlined),
+        matching: find.byType(Badge),
+      );
+      expect(more, findsOneWidget);
+      expect(t.widget<Badge>(more).isLabelVisible, isTrue);
+    });
   });
 }

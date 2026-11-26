@@ -3,9 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yet_another_luci_app/design/keystone_theme.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/cellular/cell_guard.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/cellular/cellular_data.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/cellular/lock_controls.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/cellular/preferred_towers.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/noob_rpc.dart';
 import 'package:yet_another_luci_app/models/router.dart' as model;
 import 'package:yet_another_luci_app/services/interfaces/api_service_interface.dart';
 import 'package:yet_another_luci_app/state/app_state.dart';
@@ -13,8 +15,12 @@ import 'package:yet_another_luci_app/state/app_state.dart';
 class _FakeApp extends Fake implements AppState {}
 
 class _ExecApi extends Fake implements IApiService {
-  _ExecApi({this.refuse = false, this.stamp = 'cell 1725 152'});
-  final bool refuse;
+  _ExecApi({
+    this.refuse = false,
+    this.busy = false,
+    this.stamp = 'cell 1725 152',
+  });
+  final bool refuse, busy;
   final String stamp;
   final sent = <String>[];
 
@@ -45,7 +51,21 @@ class _ExecApi extends Fake implements IApiService {
         },
       ];
     }
-    final line = (params!['params'] as List).join(' ');
+    final args = [for (final a in params!['params'] as List) '$a'];
+    if (args.first == '-c') {
+      final verb = args.skip(3).join(' ');
+      sent.add('bg $verb');
+      final out = busy
+          ? ''
+          : refuse
+          ? 'rc=1\nport not found'
+          : 'rc=0';
+      return [
+        0,
+        {'code': 0, 'stdout': out},
+      ];
+    }
+    final line = args.join(' ');
     sent.add(line);
     if (line.startsWith('json')) {
       return [
@@ -116,6 +136,10 @@ class _FakeTowers extends PreferredTowers {
 
   @override
   Future<void> remove(Tower t) async => calls.add('remove');
+
+  @override
+  Future<void> removeAll(List<Tower> list) async =>
+      calls.add('removeAll:${list.length}');
 }
 
 class _NullTowers extends _FakeTowers {
@@ -155,13 +179,19 @@ Future<void> _pump(
   ModemLocks l,
   PreferredTowers? p, {
   List<NearbyCell>? nearby,
+  CellGuard? guard,
 }) async {
   await t.pumpWidget(
     MaterialApp(
       theme: KeystoneTheme.buildDarkTheme(),
       home: Scaffold(
         body: SingleChildScrollView(
-          child: LockControls(locks: l, towers: p, nearby: nearby),
+          child: LockControls(
+            locks: l,
+            towers: p,
+            nearby: nearby,
+            guard: guard,
+          ),
         ),
       ),
     ),
@@ -220,6 +250,47 @@ class _FakeLocks implements ModemLocks {
   }) async {}
 }
 
+class _Guard {
+  _Guard({this.installed = true, this.state, this.slowArm = false});
+  final bool installed, slowArm;
+  Map<String, dynamic>? state;
+  final calls = <String>[];
+
+  CellGuard get guard => CellGuard(
+    _FakeApp(),
+    call: (m, p) async {
+      if (!installed) throw const NoobRpcError('Not found');
+      calls.add(m == 'arm' ? 'arm ${p['pci']} ${p['arfcn']} ${p['nr']}' : m);
+      if (m == 'arm' && slowArm) throw NoobRpcError.slow;
+      if (m == 'ack') state = {...?state, 'last': null};
+      if (m == 'disarm') state = {...?state, 'lock': null};
+      return state ?? {'version': '0.1.0', 'lock': null, 'last': null};
+    },
+  );
+}
+
+class _RefusingLocks extends _LockedLocks {
+  @override
+  Future<void> setLock({
+    required bool nr,
+    String pci = '',
+    String arfcn = '',
+    String band = '',
+    String scs = '',
+  }) async => throw const NoobRpcError('port not found');
+}
+
+class _BusyLocks extends _LockedLocks {
+  @override
+  Future<void> setLock({
+    required bool nr,
+    String pci = '',
+    String arfcn = '',
+    String band = '',
+    String scs = '',
+  }) async => throw const LockPending();
+}
+
 class _DeafLocks extends _LockedLocks {
   bool deaf = false;
   bool lag = false;
@@ -234,10 +305,171 @@ class _DeafLocks extends _LockedLocks {
 }
 
 void main() {
+  group('cell guard', () {
+    test('a lock arms the guard first', () async {
+      final g = _Guard();
+      final l = _LockedLocks();
+      await guardedLock(l, g.guard, nr: false, pci: '151', arfcn: '1725');
+      expect(g.calls, ['arm 151 1725 false']);
+      expect(l.locked, ['151']);
+    });
+
+    test('unlocking disarms, also while the modem is busy', () async {
+      final g = _Guard();
+      await guardedLock(_LockedLocks(), g.guard, nr: false);
+      expect(g.calls, ['disarm']);
+      final busy = _Guard();
+      await expectLater(
+        guardedLock(_BusyLocks(), busy.guard, nr: false),
+        throwsA(isA<LockPending>()),
+      );
+      expect(busy.calls, ['disarm']);
+    });
+
+    test('a lock the modem refuses is not left armed', () async {
+      final g = _Guard();
+      await expectLater(
+        guardedLock(_RefusingLocks(), g.guard, nr: true, pci: '1', arfcn: '2'),
+        throwsA(isA<NoobRpcError>()),
+      );
+      expect(g.calls, ['arm 1 2 true', 'disarm']);
+    });
+
+    test('a late arm reply still disarms when the lock fails', () async {
+      final g = _Guard(slowArm: true);
+      await expectLater(
+        guardedLock(_RefusingLocks(), g.guard, nr: false, pci: '1', arfcn: '2'),
+        throwsA(isA<NoobRpcError>()),
+      );
+      expect(g.calls, ['arm 1 2 false', 'disarm']);
+    });
+
+    test('a pending lock stays armed', () async {
+      final g = _Guard();
+      await expectLater(
+        guardedLock(_BusyLocks(), g.guard, nr: false, pci: '1', arfcn: '2'),
+        throwsA(isA<LockPending>()),
+      );
+      expect(g.calls, ['arm 1 2 false']);
+    });
+
+    test('no guard installed means info is null', () async {
+      expect(await _Guard(installed: false).guard.info(), isNull);
+    });
+
+    test('what the guard did reads plainly', () {
+      final s = GuardState.parse({
+        'lock': {'pci': 503, 'phase': 'trial'},
+        'last': {'time': 0, 'reason': 'no_service', 'pci': 503},
+      });
+      expect(s.line, 'Checking the new cell');
+      expect(
+        s.last!.text,
+        startsWith(
+          "The modem couldn't connect to PCI 503, so Cell guard removed the "
+          'lock',
+        ),
+      );
+      expect(GuardState.parse({'lock': null}).line, isNull);
+      expect(GuardEvent.parse({'reason': 'lost'}), isNull);
+    });
+
+    testWidgets('the lock screen shows the guard and what it did', (t) async {
+      final g = _Guard(
+        state: {
+          'lock': {'pci': 151, 'phase': 'watch'},
+          'last': {'time': 0, 'reason': 'lost', 'pci': 503},
+        },
+      );
+      await _pump(t, _LockedLocks(), null, guard: g.guard);
+      expect(find.text('Watching the lock'), findsOneWidget);
+      expect(
+        find.textContaining('The internet was down for 5 minutes'),
+        findsOneWidget,
+      );
+      await t.tap(find.text('OK'));
+      await t.pumpAndSettle();
+      expect(g.calls, contains('ack'));
+      expect(find.textContaining('The internet was down'), findsNothing);
+    });
+
+    testWidgets('without the guard the screen offers it', (t) async {
+      await _pump(
+        t,
+        _LockedLocks(),
+        null,
+        guard: _Guard(installed: false).guard,
+      );
+      expect(find.text('Add'), findsOneWidget);
+      expect(find.textContaining('Add Cell guard'), findsOneWidget);
+    });
+  });
+
+  group('locking by hand', () {
+    testWidgets('starts from the cells the modem can see', (t) async {
+      final l = _LockedLocks();
+      await _pump(t, l, null);
+      await t.tap(find.text('Lock to a cell'));
+      await t.pumpAndSettle();
+      expect(find.text('Cells your modem can see'), findsOneWidget);
+      await t.tap(find.text('4G PCI 152 · EARFCN 1725').last);
+      await t.pumpAndSettle();
+      await t.tap(find.text('Lock'));
+      await t.pumpAndSettle();
+      expect(find.textContaining("can't see this cell"), findsNothing);
+      expect(l.locked, ['152']);
+    });
+
+    testWidgets('warns about a cell the modem cannot see', (t) async {
+      final l = _LockedLocks();
+      await _pump(t, l, null);
+      await t.tap(find.text('Lock to a cell'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Enter numbers yourself'));
+      await t.pumpAndSettle();
+      await t.enterText(find.byType(TextFormField).at(0), '1725');
+      await t.enterText(find.byType(TextFormField).at(1), '503');
+      await t.tap(find.text('Lock'));
+      await t.pumpAndSettle();
+      expect(
+        find.text("Your modem can't see this cell right now"),
+        findsOneWidget,
+      );
+      expect(find.text('Lock anyway'), findsOneWidget);
+      await t.tap(find.text('Cancel'));
+      await t.pumpAndSettle();
+      expect(l.locked, isEmpty);
+    });
+
+    test('a cell counts as seen only with the same type and numbers', () {
+      const cells = [NearbyCell('LTE', '1725', '152', null, null)];
+      expect(canSee(cells, nr: false, pci: ' 152', arfcn: '1725'), isTrue);
+      expect(canSee(cells, nr: false, pci: '153', arfcn: '1725'), isFalse);
+      expect(canSee(cells, nr: true, pci: '152', arfcn: '1725'), isFalse);
+      expect(canSee(const [], nr: false, pci: '1', arfcn: '2'), isTrue);
+    });
+  });
+
   test('5G Modem unlock sends both offs without reading first', () async {
     final app = _ExecApp();
     await FiveGModemLocks(app).setLock(nr: false);
-    expect(app.api.sent, ['setcelllock off', 'setcelllock5g off']);
+    expect(app.api.sent, ['bg setcelllock off']);
+  });
+
+  test('a busy modem gets the change in the background', () async {
+    final app = _ExecApp(_ExecApi(busy: true));
+    await expectLater(
+      FiveGModemLocks(app).setLock(nr: false, pci: '152', arfcn: '1725'),
+      throwsA(isA<LockPending>()),
+    );
+    expect(app.api.sent, ['bg setcelllock cell 1725 152']);
+  });
+
+  test('the lock result is read from the router', () {
+    expect(lockResult('rc=0'), isNull);
+    expect(lockResult('rc=2\nbad cell'), 'bad cell');
+    expect(lockResult('rc=1'), 'Error 1');
+    expect(() => lockResult(''), throwsA(isA<LockPending>()));
   });
 
   test('unlock goes through atcmd when ModemManager blocks it', () async {
@@ -410,7 +642,22 @@ void main() {
     await t.tap(find.text('Turn off'));
     await t.pumpAndSettle();
     expect(p.calls, ['on:false']);
+    await t.tap(find.text('Enter numbers yourself'));
+    await t.pumpAndSettle();
     expect(find.text('Lock'), findsOneWidget);
+  });
+
+  testWidgets('the firmware examples can be cleared in one go', (t) async {
+    Tower w(String pci, String earfcn) =>
+        Tower(section: pci + earfcn, pci: pci, earfcn: earfcn, enabled: true);
+    final samples = [w('175', '400'), w('175', '525'), w('115', '1725')];
+    expect(firmwareSamples(samples), isTrue);
+    expect(firmwareSamples([...samples.take(2), w('151', '1725')]), isFalse);
+    final p = _FakeTowers(false, samples);
+    await _pump(t, _LockedLocks(), p);
+    await t.tap(find.text('Remove them'));
+    await t.pumpAndSettle();
+    expect(p.calls, ['removeAll:3']);
   });
 
   testWidgets('no towers part without towers', (t) async {
