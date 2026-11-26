@@ -19,35 +19,13 @@ class LockPending implements Exception {
   const LockPending();
 }
 
-const lockPartnersSh = r'''partners() {
-  s=$(uci -q show 5gmodem | sed -n "s/^5gmodem\.\([^.]*\)\.active_modem='\{0,1\}\([^']*\)'\{0,1\}$/\1 \2/p" | head -n 1)
-  [ -n "$s" ] || return 0
-  m=m_$(printf '%s' "${s#* }" | sed 's/[^A-Za-z0-9]/_/g')
-  s=${s%% *}
-  port=$(uci -q get "5gmodem.$m.at_port" || uci -q get "5gmodem.$s.at_port" || uci -q get "5gmodem.$s.device")
-  [ -n "$port" ] || return 0
-  c=$(cat "/etc/auto-pci-cell/ca_$1_$2" 2>/dev/null)
-  case $c in *[!0-9,]*) c= ;; esac
-  [ -n "$c" ] || c=$(/usr/share/5gmodem/atcmd.sh "$port" AT+QCAINFO 2>/dev/null | tr -d '\r" ' | awk -F, -v e="$1" -v q="$2" '
-    /^\+QCAINFO:PCC,/ { on = ($2 == e && $6 == q) }
-    /^\+QCAINFO:SCC,/ && on && $4 ~ /^LTEBAND/ && $2 ~ /^[0-9]+$/ && $6 ~ /^[0-9]+$/ && !($2 == e && $6 == q) && !seen[$2 "," $6]++ { o = o (o == "" ? "" : ",") $2 "," $6 }
-    END { print o }')
-  c=$(printf '%s' "$c" | cut -d, -f1-18)
-  [ -n "$c" ] && echo "$port $(( ($(printf '%s' "$c" | tr -cd , | wc -c) + 1) / 2 + 1 )),$1,$2,$c"
-}
-''';
-
-const _lockSh =
-    '$lockPartnersSh'
-    r'''rc=/tmp/keystone-celllock.rc
+const _lockSh = r'''rc=/tmp/keystone-celllock.rc
 out=/tmp/keystone-celllock.out
 job=/tmp/keystone-celllock.job
 rm -f "$rc" "$out"
 echo $$ >"$job"
 me=$$
-( ca=
-  [ "$1 $2" = "setcelllock cell" ] && ca=$(partners "$3" "$4")
-  n=0
+( n=0
   while :; do
     /usr/share/5gmodem/bands.sh "$@" >"$out" 2>&1
     r=$?
@@ -58,20 +36,7 @@ me=$$
   done
   [ "$1 $2" = "setcelllock off" ] &&
     /usr/share/5gmodem/bands.sh setcelllock5g off >/dev/null 2>&1
-  [ "$(cat "$job" 2>/dev/null)" = "$me" ] || exit 0
-  echo $r >"$rc"
-  [ "$r" = 0 ] && [ -n "$ca" ] || exit 0
-  j=0
-  while [ $j -lt 6 ] && [ "$(cat "$job" 2>/dev/null)" = "$me" ]; do
-    sleep 5
-    if /usr/share/5gmodem/atcmd.sh "${ca%% *}" AT+QCAINFO 2>/dev/null | tr -d '\r" ' |
-      grep -q "^+QCAINFO:PCC,$3,[^,]*,[^,]*,[^,]*,$4,"; then
-      [ "$(cat "$job" 2>/dev/null)" = "$me" ] &&
-        /usr/share/5gmodem/atcmd.sh "${ca%% *}" "AT+QNWLOCK=\"common/4g\",${ca#* }" >/dev/null 2>&1
-      break
-    fi
-    j=$((j+1))
-  done ) </dev/null >/dev/null 2>&1 &
+  [ "$(cat "$job" 2>/dev/null)" = "$me" ] && echo $r >"$rc" ) </dev/null >/dev/null 2>&1 &
 i=0
 while [ ! -s "$rc" ] && [ $i -lt 5 ]; do sleep 1; i=$((i+1)); done
 [ -s "$rc" ] && { echo "rc=$(cat "$rc")"; cat "$out"; }
@@ -1062,12 +1027,16 @@ class _LockControlsState extends State<LockControls> {
                 Text('Lock to a cell', style: KeystoneType.sheetTitle(ks.tx)),
                 const SizedBox(height: 8),
                 Text(
-                  _guard == null
-                      ? 'The modem stays on this cell only. If it loses it, '
-                            'the internet stays down until you unlock.'
-                      : "The modem stays on this cell only. If it can't "
-                            'connect or stops working, Cell guard removes the '
-                            'lock.',
+                  [
+                    _guard == null
+                        ? 'The modem stays on this cell only. If it loses it, '
+                              'the internet stays down until you unlock.'
+                        : "The modem stays on this cell only. If it can't "
+                              'connect or stops working, Cell guard removes '
+                              'the lock.',
+                    'A cell lock can stop carrier aggregation, so the top '
+                        'speed may drop. To keep it, lock bands instead.',
+                  ].join(' '),
                   style: KeystoneType.body(ks.tx2),
                 ),
                 const SizedBox(height: 12),
