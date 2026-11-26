@@ -1,7 +1,11 @@
 # Changelog
 
-## 1.1.1
+## 1.1.2
 
+- Locking a cell locks just that cell, and carrier aggregation keeps working
+- The mobile network page works on routers with an older QModem, which showed "QModem's LuCI page didn't answer (403)"
+- The cell lock, password and weak-signal sheets keep their buttons above the phone's navigation bar
+- The home screen's shortcuts are outlined, and data used reads as one line
 - Cell guard, a new add-on: when you lock a cell, it removes the lock if the modem can't connect, the cell is much worse than the one before, or it stops working later, so a lock never leaves the router offline
 - Locking a cell starts from the cells your modem can see, and warns before locking to one it can't see
 - Locking or unlocking a cell retries when the modem is busy, and a newer lock or unlock always wins over an older one still running
