@@ -4,8 +4,6 @@
 
 - Cell guard, a new add-on: when you lock a cell, it removes the lock if the modem can't connect, the cell is much worse than the one before, or it stops working later, so a lock never leaves the router offline
 - Locking a cell starts from the cells your modem can see, and warns before locking to one it can't see
-- Locking a 4G cell on 5G Modem also lists the cells it aggregates with, so carrier aggregation has a chance to keep working, and your cell stays the base
-- The lock form says that a cell lock can stop carrier aggregation, and that locking bands keeps it
 - Locking or unlocking a cell retries when the modem is busy, and a newer lock or unlock always wins over an older one still running
 - Locking and unlocking a cell no longer freezes when the modem is busy; the change finishes in the background
 - The modem screen says when the modem stops answering instead of showing an old reading as connected
