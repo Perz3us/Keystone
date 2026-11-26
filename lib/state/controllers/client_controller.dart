@@ -9,6 +9,7 @@ import 'package:yet_another_luci_app/services/interfaces/auth_service_interface.
 import 'package:yet_another_luci_app/services/router_service.dart';
 import 'package:yet_another_luci_app/state/app_state.dart'
     show
+        recentFdbMacs,
         kNeighborProbeInterval,
         kNeighborProbeMaxBatch,
         normalizeMac,
@@ -1145,38 +1146,14 @@ class ClientController {
       final fdbMacs = <String>{};
       try {
         final fdbStr =
-            await execRouterCmd('/sbin/bridge', ['fdb', 'show']) ??
-            await execRouterCmd('bridge', ['fdb', 'show']);
-        if (fdbStr != null && fdbStr.trim().isNotEmpty) {
-          final macRegex = RegExp(r'([0-9a-fA-F]{2}(?::[0-9a-fA-F]{2}){5})');
-          for (final line in fdbStr.split('\n')) {
-            final lower = line.toLowerCase();
-            if (lower.contains('self') || lower.contains('permanent')) continue;
-            final match = macRegex.firstMatch(line);
-            if (match != null) {
-              final m = match.group(0);
-              if (m != null) fdbMacs.add(normMac(m));
-            }
-          }
-        }
+            await execRouterCmd('/sbin/bridge', ['-s', 'fdb', 'show']) ??
+            await execRouterCmd('bridge', ['-s', 'fdb', 'show']);
+        if (fdbStr != null) fdbMacs.addAll(recentFdbMacs(fdbStr));
         if (fdbMacs.isEmpty) {
           final brctlStr =
               await execRouterCmd('/usr/sbin/brctl', ['showmacs', 'br-lan']) ??
               await execRouterCmd('brctl', ['showmacs', 'br-lan']);
-          if (brctlStr != null && brctlStr.trim().isNotEmpty) {
-            final macRegex = RegExp(r'([0-9a-fA-F]{2}(?::[0-9a-fA-F]{2}){5})');
-            for (final line in brctlStr.split('\n')) {
-              final lower = line.toLowerCase();
-              if (lower.contains('yes')) {
-                continue;
-              }
-              final match = macRegex.firstMatch(line);
-              if (match != null) {
-                final m = match.group(0);
-                if (m != null) fdbMacs.add(normMac(m));
-              }
-            }
-          }
+          if (brctlStr != null) fdbMacs.addAll(recentFdbMacs(brctlStr));
         }
       } catch (_) {}
 
@@ -1797,9 +1774,8 @@ class ClientController {
           finalConnType = ConnectionType.wireless;
         } else {
           final isL3Active =
-              wiredNeighEntry != null &&
-              (neighState == NeighborReachability.reachable ||
-                  neighState == NeighborReachability.unknown);
+              (wiredNeighEntry?['nud_state'] as String? ?? '').toUpperCase() ==
+              'REACHABLE';
 
           bool isCurrentlyActive = isFdbActive || isL3Active;
 

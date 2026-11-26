@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # build by specifying --build-name and --build-number, respectively.
 # In Android, build-name is used as versionName while build-number used as versionCode.
 # Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-version: 1.0.2+1002
+version: 1.1.0+1100
 
 environment:
   sdk: ^3.8.1
@@ -48,6 +48,9 @@ dependencies:
   dartssh2: ^4.1.0
   xterm: ^4.0.0
   multicast_dns: ^0.3.3+1
+  workmanager: ^0.10.10
+  flutter_local_notifications: ^23.0.4
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:

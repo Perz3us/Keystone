@@ -25,8 +25,9 @@ class _Backend implements SignInBackend {
   LoginFailure get lastFailure => failure;
   @override
   String? get errorMessage => error;
+  String? gateway = '192.168.1.1';
   @override
-  Future<String?> detectGatewayIp() async => '192.168.1.1';
+  Future<String?> detectGatewayIp() async => gateway;
   @override
   Future<bool> login(String ip, String user, String password) async {
     passwords.add(password);
@@ -101,6 +102,23 @@ void main() {
     expect(find.text('Connect'), findsOneWidget);
     expect(find.text('Use a password'), findsOneWidget);
     expect(find.text('Other router'), findsOneWidget);
+  });
+
+  testWidgets('a router away from this Wi-Fi is not called local', (t) async {
+    await _pump(t, _Backend(router: _router())..gateway = '10.0.0.1');
+    expect(find.text('On this Wi-Fi'), findsNothing);
+  });
+
+  testWidgets('a router that did not answer says so', (t) async {
+    await _pump(
+      t,
+      _Backend(router: _router())
+        ..failure = LoginFailure.unreachable
+        ..error = 'No answer',
+      autoConnect: true,
+    );
+    expect(find.text('On this Wi-Fi'), findsNothing);
+    expect(find.text("Can't reach it"), findsOneWidget);
   });
 
   testWidgets('a firmware hostname is never the name', (t) async {

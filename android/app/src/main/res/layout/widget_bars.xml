@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_bars"
+    android:layout_width="wrap_content"
+    android:layout_height="16dp"
+    android:layout_marginStart="10dp"
+    android:contentDescription="Signal 3 of 4"
+    android:gravity="bottom"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/widget_bar1"
+        android:layout_width="4dp"
+        android:layout_height="6dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/widget_bar"
+        android:tint="@color/widget_ok" />
+
+    <ImageView
+        android:id="@+id/widget_bar2"
+        android:layout_width="4dp"
+        android:layout_height="9dp"
+        android:layout_marginStart="2dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/widget_bar"
+        android:tint="@color/widget_ok" />
+
+    <ImageView
+        android:id="@+id/widget_bar3"
+        android:layout_width="4dp"
+        android:layout_height="12dp"
+        android:layout_marginStart="2dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/widget_bar"
+        android:tint="@color/widget_ok" />
+
+    <ImageView
+        android:id="@+id/widget_bar4"
+        android:layout_width="4dp"
+        android:layout_height="16dp"
+        android:layout_marginStart="2dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/widget_bar"
+        android:tint="@color/widget_track" />
+</LinearLayout>

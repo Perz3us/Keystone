@@ -55,7 +55,31 @@ class SpeedTestProgress {
 
   bool get running => phase != SpeedPhase.done && phase != SpeedPhase.failed;
 
-  static SpeedTestProgress parse(String output) {
+  static SpeedTestProgress parse(String output, {String errors = ''}) {
+    final p = _parse(output);
+    if (!p.running) return p;
+    for (final line in errors.split('\n').map((l) => l.trim())) {
+      if (line.isEmpty) continue;
+      Object? j;
+      try {
+        j = jsonDecode(line);
+      } catch (_) {
+        if (p.phase == SpeedPhase.starting) {
+          return SpeedTestProgress(phase: SpeedPhase.failed, error: line);
+        }
+        continue;
+      }
+      if (j is Map && j['type'] == 'log' && j['level'] == 'error') {
+        return SpeedTestProgress(
+          phase: SpeedPhase.failed,
+          error: j['message']?.toString(),
+        );
+      }
+    }
+    return p;
+  }
+
+  static SpeedTestProgress _parse(String output) {
     var phase = SpeedPhase.starting;
     var live = 0.0, progress = 0.0;
     double? ping, jitter, down, up, loss;
@@ -73,7 +97,7 @@ class SpeedTestProgress {
       try {
         j = jsonDecode(line);
       } catch (_) {
-        return SpeedTestProgress(phase: SpeedPhase.failed, error: line);
+        continue;
       }
       if (j is! Map) continue;
       String? where(Object? s) {

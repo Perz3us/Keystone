@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_bg">#FFFDFDFF</color>
+    <color name="widget_track">#FFDBDEE3</color>
+    <color name="widget_text">#FF151B24</color>
+    <color name="widget_body">#FF2D333D</color>
+    <color name="widget_muted">#FF626A75</color>
+    <color name="widget_accent">#FF276ED2</color>
+    <color name="widget_ok">#FF219761</color>
+    <color name="widget_warn">#FFDD881B</color>
+    <color name="widget_bad">#FFC93B3B</color>
+    <string name="widget_description">Internet, signal and data at a glance</string>
+    <string name="widget_data_description">Data used against your plan, and when it resets</string>
+    <string name="widget_overview_description">Status, bands, signal and data together</string>
+</resources>

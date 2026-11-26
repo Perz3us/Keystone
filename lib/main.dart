@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:yet_another_luci_app/background/background_check.dart';
+import 'package:yet_another_luci_app/background/notifier.dart';
 import 'package:yet_another_luci_app/l10n/app_localizations.dart';
 import 'package:yet_another_luci_app/design/keystone_theme.dart';
 import 'package:yet_another_luci_app/state/app_state.dart';
@@ -68,6 +73,8 @@ void main() async {
   }
 
   runApp(const ProviderScope(child: LuCIApp()));
+  unawaited(startBackground());
+  if (Platform.isAndroid) unawaited(listenForAlertTaps());
 }
 
 class LuciScrollBehavior extends MaterialScrollBehavior {

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'package:yet_another_luci_app/main.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/slow/slow_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +40,15 @@ class DiagnosticsScreen extends ConsumerWidget {
           onCancel: checker.cancel,
         ),
         const KsSection('Tools'),
+        KsRow(
+          title: 'Why is it slow?',
+          subtitle: 'Signal, line, Wi-Fi and busy devices in one go',
+          onTap: () => push(
+            SlowScreen(
+              checks: () => routerSlowChecks(ref.read(appStateProvider)),
+            ),
+          ),
+        ),
         KsRow(
           title: 'Ping',
           subtitle: 'See if an address answers, and how fast',

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yet_another_luci_app/design/keystone_tokens.dart';
@@ -54,9 +56,10 @@ class _RoutersSheetState extends ConsumerState<_RoutersSheet> {
     }
   }
 
-  Future<void> _select(String id) async {
+  Future<void> _select(String id, {bool force = false}) async {
     final app = ref.read(appStateProvider);
-    if (id == app.selectedRouter?.id &&
+    if (!force &&
+        id == app.selectedRouter?.id &&
         app.hasActiveSession &&
         !widget.fromSignIn) {
       return _connected();
@@ -65,7 +68,7 @@ class _RoutersSheetState extends ConsumerState<_RoutersSheet> {
       _switching = id;
       _error = null;
     });
-    await app.selectRouter(id, context: context);
+    await app.selectRouter(id, context: context, force: force);
     if (!mounted) return;
     if (app.hasActiveSession) return _connected();
     setState(() {
@@ -182,6 +185,12 @@ class _RoutersSheetState extends ConsumerState<_RoutersSheet> {
         if (id != r.id && app.routers.any((x) => x.id == id)) {
           return 'You already have a router with that address and username.';
         }
+        final current = app.selectedRouter?.id == r.id;
+        final moved =
+            host != r.ipAddress ||
+            https != r.useHttps ||
+            v.user != r.username ||
+            v.password != r.password;
         await app.updateRouter(
           r.copyWith(
             id: id,
@@ -197,6 +206,7 @@ class _RoutersSheetState extends ConsumerState<_RoutersSheet> {
         if (mounted) {
           Navigator.of(context).pop();
           setState(() {});
+          if (current && moved) unawaited(_select(id, force: true));
         }
         return null;
       },

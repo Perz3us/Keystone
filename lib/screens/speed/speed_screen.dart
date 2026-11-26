@@ -13,6 +13,7 @@ import 'package:yet_another_luci_app/screens/speed/speed_view.dart';
 
 const _bin = '/usr/bin/ookla-speedtest';
 const _out = '/tmp/keystone_speedtest.jsonl';
+const _err = '/tmp/keystone_speedtest.err';
 const _historyKey = 'speed_history';
 const _keep = 10;
 
@@ -71,8 +72,8 @@ class _SpeedScreenState extends ConsumerState<SpeedScreen> {
     setState(() => _progress = const SpeedTestProgress());
     try {
       await _sh(
-        'exec 0<&- 1>&- 2>&-; : > $_out; $_bin --accept-license '
-        '--accept-gdpr --format=jsonl --progress=yes > $_out 2>&1 &',
+        'exec 0<&- 1>&- 2>&-; : > $_out; : > $_err; $_bin --accept-license '
+        '--accept-gdpr --format=jsonl --progress=yes > $_out 2> $_err &',
       );
     } catch (e) {
       if (mounted) {
@@ -105,13 +106,15 @@ class _SpeedScreenState extends ConsumerState<SpeedScreen> {
 
   Future<void> _readOnce() async {
     {
+      final app = ref.read(appStateProvider);
       String text;
       try {
-        text = await noobReadFile(ref.read(appStateProvider), _out);
+        text = await noobReadFile(app, _out);
       } catch (_) {
         return;
       }
-      final p = SpeedTestProgress.parse(text);
+      final errors = await noobReadFile(app, _err).catchError((_) => '');
+      final p = SpeedTestProgress.parse(text, errors: errors);
       final late =
           _startedAt != null &&
           DateTime.now().difference(_startedAt!) > const Duration(minutes: 2);
@@ -135,7 +138,7 @@ class _SpeedScreenState extends ConsumerState<SpeedScreen> {
     _poll?.cancel();
     setState(() => _progress = null);
     try {
-      await _sh('killall ookla-speedtest 2>/dev/null; : > $_out');
+      await _sh('killall ookla-speedtest 2>/dev/null; : > $_out; : > $_err');
     } catch (_) {}
   }
 

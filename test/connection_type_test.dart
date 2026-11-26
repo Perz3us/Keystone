@@ -376,4 +376,23 @@ port no	mac addr		is local?	ageing timer
       },
     );
   });
+
+  group('recentFdbMacs', () {
+    test('brctl: skips the router itself and anything idle over a minute', () {
+      const out = '''port no	mac addr		is local?	ageing timer
+  1	20:23:51:b7:59:22	yes		   0.00
+  3	aa:bb:cc:00:00:01	no		   4.10
+  6	aa:bb:cc:00:00:02	no		 240.55
+''';
+      expect(recentFdbMacs(out), {'AA:BB:CC:00:00:01'});
+    });
+    test('bridge -s: uses the "used" seconds', () {
+      const out = '''aa:bb:cc:00:00:01 dev lan1 used 3/3 master br-lan
+aa:bb:cc:00:00:02 dev phy0-ap0 used 200/200 master br-lan
+aa:bb:cc:00:00:03 dev lan2 master br-lan
+33:33:00:00:00:01 dev br-lan self permanent
+''';
+      expect(recentFdbMacs(out), {'AA:BB:CC:00:00:01', 'AA:BB:CC:00:00:03'});
+    });
+  });
 }

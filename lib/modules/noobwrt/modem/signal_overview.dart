@@ -66,6 +66,9 @@ class SignalCarrier {
   );
 }
 
+int signalBars(num rsrp) =>
+    [-85, -95, -105, -115].where((s) => rsrp >= s).length;
+
 class SignalOverview {
   const SignalOverview({
     this.operatorName,
@@ -138,7 +141,7 @@ class SignalOverview {
 
   int? get bars {
     final n = double.tryParse(rsrp ?? '');
-    if (n != null) return [-85, -95, -105, -115].where((s) => n >= s).length;
+    if (n != null) return signalBars(n);
     return percent == null ? null : (percent! / 25).ceil().clamp(0, 4);
   }
 

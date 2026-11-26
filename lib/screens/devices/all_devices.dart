@@ -70,6 +70,9 @@ class AllDevicesView extends StatefulWidget {
     this.usage = const {},
     this.usageLabel = 'Data used',
     this.startByData = false,
+    this.note,
+    this.noteAction,
+    this.onNote,
   });
 
   final List<Client> devices;
@@ -86,6 +89,10 @@ class AllDevicesView extends StatefulWidget {
   final String usageLabel;
 
   final bool startByData;
+
+  final String? note;
+  final String? noteAction;
+  final VoidCallback? onNote;
 
   @override
   State<AllDevicesView> createState() => _AllDevicesViewState();
@@ -181,6 +188,12 @@ class _AllDevicesViewState extends State<AllDevicesView> {
                 ),
           ],
         ),
+        if (widget.note != null)
+          KsNote(
+            widget.note!,
+            action: widget.noteAction,
+            onAction: widget.onNote,
+          ),
         if (widget.usage.isNotEmpty) ...[
           const SizedBox(height: 8),
           KsChips<bool>(

@@ -100,6 +100,7 @@ class DdnsInstance {
   final String interface;
   final String ipSource;
   final String ipNetwork;
+  final String ipInterface;
   final String ipUrl;
   final String updateUrl;
   final String updateScript;
@@ -122,6 +123,7 @@ class DdnsInstance {
     this.interface = 'wan',
     this.ipSource = 'web',
     this.ipNetwork = 'wan',
+    this.ipInterface = '',
     this.ipUrl = 'http://checkip.dyndns.com',
     this.updateUrl = '',
     this.updateScript = '',
@@ -145,6 +147,7 @@ class DdnsInstance {
     String? interface,
     String? ipSource,
     String? ipNetwork,
+    String? ipInterface,
     String? ipUrl,
     String? updateUrl,
     String? updateScript,
@@ -167,6 +170,7 @@ class DdnsInstance {
       interface: interface ?? this.interface,
       ipSource: ipSource ?? this.ipSource,
       ipNetwork: ipNetwork ?? this.ipNetwork,
+      ipInterface: ipInterface ?? this.ipInterface,
       ipUrl: ipUrl ?? this.ipUrl,
       updateUrl: updateUrl ?? this.updateUrl,
       updateScript: updateScript ?? this.updateScript,
@@ -207,6 +211,7 @@ class DdnsInstance {
       interface: json['interface']?.toString() ?? 'wan',
       ipSource: json['ip_source']?.toString() ?? 'web',
       ipNetwork: json['ip_network']?.toString() ?? 'wan',
+      ipInterface: json['ip_interface']?.toString() ?? '',
       ipUrl: json['ip_url']?.toString() ?? 'http://checkip.dyndns.com',
       updateUrl: json['update_url']?.toString() ?? '',
       updateScript: json['update_script']?.toString() ?? '',
@@ -240,6 +245,9 @@ class DdnsInstance {
 
     if (ipSource == 'web' && ipUrl.isNotEmpty) {
       params['ip_url'] = ipUrl;
+    }
+    if (ipSource == 'interface' && ipInterface.isNotEmpty) {
+      params['ip_interface'] = ipInterface;
     }
     if (serviceName == 'custom') {
       if (updateUrl.isNotEmpty) params['update_url'] = updateUrl;

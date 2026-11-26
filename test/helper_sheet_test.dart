@@ -110,14 +110,21 @@ const _body =
     'signal, line ping and data history. About 4 KB. You can remove it here '
     'any time.';
 
-Future<void> _open(WidgetTester t, _Installer h, {bool settle = true}) async {
+Future<void> _open(
+  WidgetTester t,
+  _Installer h, {
+  bool settle = true,
+  AddonText text = signalHistoryText,
+  List<(String, HelperInstaller)> dependents = const [],
+}) async {
   await t.pumpWidget(
     MaterialApp(
       theme: KeystoneTheme.buildLightTheme(),
       home: Scaffold(
         body: Builder(
           builder: (c) => TextButton(
-            onPressed: () => showHelperSheet(c, h),
+            onPressed: () =>
+                showHelperSheet(c, h, text: text, dependents: dependents),
             child: const Text('open'),
           ),
         ),
@@ -202,6 +209,45 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text('Signal history removed.'), findsOneWidget);
     expect(_button('Install'), findsOneWidget);
+  });
+
+  testWidgets('another add-on uses its own words and has no retention', (
+    t,
+  ) async {
+    final h = _Installer(have: '0.1.0')..infoMap = {'keep_days': 7};
+    await _open(t, h, text: alertsText);
+    expect(find.text('Alerts'), findsOneWidget);
+    expect(find.text(alertsText.about), findsOneWidget);
+    expect(find.text('Keep history for'), findsNothing);
+    expect(h.infoCalls, 0);
+    await t.tap(find.text('Remove'));
+    await t.pumpAndSettle();
+    expect(find.text('Remove alerts?'), findsOneWidget);
+    await t.tap(find.text('Remove').last);
+    await t.pump();
+    h.job!.complete();
+    await t.pumpAndSettle();
+    expect(find.text('Alerts removed.'), findsOneWidget);
+  });
+
+  testWidgets('signal history stays while another add-on needs it', (t) async {
+    final h = _Installer(have: '0.3.0');
+    await _open(
+      t,
+      h,
+      dependents: [
+        ('Alerts', _Installer(have: '0.1.0')),
+        ('Data per device', _Installer()),
+      ],
+    );
+    await t.tap(find.text('Remove'));
+    await t.pumpAndSettle();
+    expect(
+      find.text('Remove Alerts first. It needs signal history.'),
+      findsOneWidget,
+    );
+    expect(find.text('Remove signal history?'), findsNothing);
+    expect(h.calls, isEmpty);
   });
 
   testWidgets('cancelling the confirm removes nothing', (t) async {
@@ -362,7 +408,7 @@ void main() {
       expect(find.text('Version 0.1.0'), findsOneWidget);
       await t.tap(find.text('Signal history on the router'));
       await t.pumpAndSettle();
-      expect(find.text(_body), findsOneWidget);
+      expect(find.text(signalHistoryText.about), findsOneWidget);
     });
 
     testWidgets('says Not installed', (t) async {

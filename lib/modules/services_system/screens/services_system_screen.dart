@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'package:yet_another_luci_app/modules/noobwrt/noob_rpc.dart';
+import 'package:yet_another_luci_app/modules/services_system/restart_preset.dart';
+import 'package:yet_another_luci_app/modules/services_system/screens/restart_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yet_another_luci_app/design/keystone_tokens.dart';
 import 'package:yet_another_luci_app/main.dart';
+import 'package:yet_another_luci_app/utils/internet_link.dart';
 import 'package:yet_another_luci_app/widgets/keystone/ks_kit.dart';
 import '../models/ddns_info.dart';
 import '../models/services_system_info.dart';
@@ -194,6 +198,7 @@ class _ServiceListScreenState extends ConsumerState<ServiceListScreen> {
           });
     return KsPage(
       title: 'Router services',
+      back: 'Services',
       subtitle: 'Programs that run in the background',
       onRefresh: () => app.fetchDashboardData(force: true),
       children: [
@@ -266,6 +271,33 @@ class _CronScreenState extends ConsumerState<CronScreen> {
     ]);
   }
 
+  Future<void> _restart() async {
+    final app = ref.read(appStateProvider);
+    var guarded = false;
+    try {
+      await noobCall(app, 'file', 'stat', {'path': restartGuard});
+      guarded = true;
+    } catch (_) {}
+    if (!mounted) return;
+    final jobs = _jobs();
+    final current = jobs.where((j) => isRestartPreset(j.rawLine)).firstOrNull;
+    await ksSheet<void>(
+      context,
+      (c) => RestartForm(
+        guarded: guarded,
+        current: current?.rawLine,
+        onSave: (line) async {
+          await _write([
+            for (final j in jobs)
+              if (!isRestartPreset(j.rawLine)) j,
+            if (line != null) CronJob.fromCronLine(line),
+          ]);
+          if (c.mounted) Navigator.of(c).pop();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ks = context.ks;
@@ -273,58 +305,75 @@ class _CronScreenState extends ConsumerState<CronScreen> {
     final jobs = ServicesSystemOverview.fromDashboardData(
       app.dashboardData,
     ).cronJobs;
+    final restart = jobs
+        .map((j) => j.isCommented ? null : readRestartPreset(j.rawLine))
+        .nonNulls
+        .firstOrNull;
     return KsPage(
       title: 'Scheduled tasks',
+      back: 'Services',
       subtitle: 'Commands the router runs on a timer',
       onRefresh: () => app.fetchDashboardData(force: true),
       children: [
         if (jobs.isEmpty)
           Text(
-            'None yet. For example, restart the Wi-Fi every night at 4:00.',
+            'None yet. For example, restart the Wi-Fi every night at '
+            '${const TimeOfDay(hour: 4, minute: 0).format(context)}.',
             style: KeystoneType.body(ks.mu),
           ),
         for (final (i, j) in jobs.indexed)
-          KsRow(
-            title: cronWords(j.expression),
-            subtitle: j.command,
-            chevron: false,
-            onTap: _busy ? null : () => _edit(i),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Switch(
-                  value: !j.isCommented,
-                  onChanged: _busy
-                      ? null
-                      : (on) => _write([
-                          for (final (k, x) in jobs.indexed)
-                            k == i ? x.copyWith(isCommented: !on) : x,
-                        ]),
-                ),
-                IconButton(
-                  tooltip: 'Remove',
-                  icon: Icon(Icons.close_rounded, color: ks.mu),
-                  onPressed: _busy
-                      ? null
-                      : () async {
-                          final ok = await ksConfirm(
-                            context,
-                            title: 'Remove this task?',
-                            body: j.command,
-                            action: 'Remove',
-                            danger: true,
-                          );
-                          if (ok && mounted) {
-                            await _write([
-                              for (final (k, x) in jobs.indexed)
-                                if (k != i) x,
-                            ]);
-                          }
-                        },
-                ),
-              ],
+          if (!isRestartPreset(j.rawLine))
+            KsRow(
+              title: cronWords(j.expression),
+              subtitle: j.command,
+              subtitleLines: 2,
+              chevron: false,
+              onTap: _busy ? null : () => _edit(i),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Switch(
+                    value: !j.isCommented,
+                    onChanged: _busy
+                        ? null
+                        : (on) => _write([
+                            for (final (k, x) in jobs.indexed)
+                              k == i ? x.copyWith(isCommented: !on) : x,
+                          ]),
+                  ),
+                  IconButton(
+                    tooltip: 'Remove',
+                    icon: Icon(Icons.close_rounded, color: ks.mu),
+                    onPressed: _busy
+                        ? null
+                        : () async {
+                            final ok = await ksConfirm(
+                              context,
+                              title: 'Remove this task?',
+                              body: j.command,
+                              action: 'Remove',
+                              danger: true,
+                            );
+                            if (ok && mounted) {
+                              await _write([
+                                for (final (k, x) in jobs.indexed)
+                                  if (k != i) x,
+                              ]);
+                            }
+                          },
+                  ),
+                ],
+              ),
             ),
-          ),
+        KsRow(
+          title: 'Restart every night',
+          subtitle: restart == null
+              ? 'Off'
+              : '${restart.target == RestartTarget.modem ? 'Modem' : 'Router'} at '
+                    '${TimeOfDay(hour: restart.hour, minute: restart.minute).format(context)}',
+          leading: Icon(Icons.restart_alt_rounded, color: ks.mu),
+          onTap: _busy ? null : _restart,
+        ),
         KsRow(
           title: 'Add a task',
           leading: Icon(Icons.add_rounded, color: ks.mu),
@@ -461,6 +510,9 @@ class _DdnsScreenState extends ConsumerState<DdnsScreen> {
     context,
     DdnsEditDialog(
       existingInstance: i,
+      links: dumpInterfaces(
+        ref.read(appStateProvider).dashboardData?['interfaceDump'],
+      ),
       onSave: (d) async {
         final app = ref.read(appStateProvider);
         final ok = await app.saveDdnsInstance(d);
@@ -478,6 +530,7 @@ class _DdnsScreenState extends ConsumerState<DdnsScreen> {
     final d = DdnsOverview.fromDashboardData(app.dashboardData);
     return KsPage(
       title: 'Dynamic DNS',
+      back: 'Services',
       subtitle: 'A web address that follows your changing internet address',
       onRefresh: () => app.fetchDashboardData(force: true),
       children: [

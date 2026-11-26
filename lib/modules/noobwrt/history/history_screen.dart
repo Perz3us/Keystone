@@ -32,6 +32,7 @@ class HistoryScreen extends StatefulWidget {
     this.helper,
     this.now,
     this.maxDays = 7,
+    this.outages,
   });
 
   final Future<HistoryData?> Function(DateTime from, DateTime to) load;
@@ -39,6 +40,9 @@ class HistoryScreen extends StatefulWidget {
   final HelperInstaller? helper;
   final DateTime Function()? now;
   final int maxDays;
+
+  final Future<List<(DateTime, DateTime)>> Function(DateTime from, DateTime to)?
+  outages;
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -50,6 +54,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String? _summary;
   DateTime? _from, _to;
   bool _loading = true, _empty = false, _failedLoad = false;
+  List<(DateTime, DateTime)> _outages = const [];
   int _seq = 0;
   HistoryPoint? _pick;
   String? _version;
@@ -83,10 +88,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final to = _now();
     final from = to.subtract(_range);
     setState(() => _loading = true);
+    final down = widget.outages
+        ?.call(from, to)
+        .then<List<(DateTime, DateTime)>>(
+          (o) => o,
+          onError: (_) => const <(DateTime, DateTime)>[],
+        );
     try {
       final d = await widget.load(from, to);
+      final o = await down ?? const <(DateTime, DateTime)>[];
       if (!mounted || seq != _seq) return;
       setState(() {
+        _outages = o;
         _loading = false;
         _failedLoad = false;
         _empty = d == null;
@@ -324,7 +337,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(
-            'Since the router restarted at ${_when(d.since!)}.',
+            'No readings before ${_when(d.since!)}.',
             style: KeystoneType.secondary(ks.mu),
           ),
         ),
@@ -371,6 +384,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             to: to,
             slow: slow,
             slowColor: ks.warn,
+            outages: _outages,
+            outageColor: ks.bad,
             grid: ks.line,
             labelStyle: label,
             top: '${pingTop.round()}',

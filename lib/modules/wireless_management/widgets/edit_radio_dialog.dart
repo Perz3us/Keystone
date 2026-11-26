@@ -7,6 +7,7 @@ import 'package:yet_another_luci_app/widgets/keystone/ks_kit.dart';
 import 'package:yet_another_luci_app/l10n/app_localizations.dart';
 import 'package:yet_another_luci_app/main.dart';
 import 'package:yet_another_luci_app/widgets/luci_guardrail.dart';
+import 'package:yet_another_luci_app/screens/wifi/channel_check_screen.dart';
 import '../models/wireless_info.dart';
 
 class EditRadioDialog extends ConsumerStatefulWidget {
@@ -230,6 +231,28 @@ class _EditRadioDialogState extends ConsumerState<EditRadioDialog> {
       channels.insert(0, _selectedChannel);
     }
     return channels;
+  }
+
+  Future<void> _findChannel(List<String> channels) async {
+    final app = ref.read(appStateProvider);
+    final radio = widget.radio;
+    final ifname = radio.interfaces
+        .map((i) => i.ifName)
+        .where((n) => n.isNotEmpty)
+        .firstOrNull;
+    final picked = await Navigator.of(context).push<int>(
+      MaterialPageRoute(
+        builder: (_) => ChannelCheckScreen(
+          scan: () => scanWifi(app, ifname ?? radio.name),
+          is5g: radio.bandLabel.contains('5 GHz'),
+          current: int.tryParse(_selectedChannel) ?? 0,
+          allowed: {for (final c in channels) ?int.tryParse(c)},
+        ),
+      ),
+    );
+    if (picked != null && mounted) {
+      setState(() => _selectedChannel = '$picked');
+    }
   }
 
   bool _isValidChannelForCountry(int channel, String countryCode) {
@@ -555,6 +578,14 @@ class _EditRadioDialogState extends ConsumerState<EditRadioDialog> {
                   ],
                   onChanged: (v) => setState(() => _selectedChannel = v),
                 ),
+                if (!widget.radio.bandLabel.contains('6 GHz'))
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () => _findChannel(channels),
+                      child: const Text('Find a quieter channel'),
+                    ),
+                  ),
                 KsChoice<String>(
                   label: 'Width',
                   value: _selectedHtMode,

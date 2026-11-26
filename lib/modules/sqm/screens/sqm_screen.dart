@@ -227,7 +227,7 @@ class _SqmScreenState extends ConsumerState<SqmScreen> {
     _down.text = sqmMbps(q?.download ?? 0);
     _up.text = sqmMbps(q?.upload ?? 0);
     _presetId = q == null ? SqmPreset.cakeFiber.id : SqmPreset.match(q)?.id;
-    _interface = q?.interface ?? s.primaryWanInterface ?? 'wan';
+    _interface = sqmTargetInterface(q, s);
   }
 
   int _kbit(String t) => ((double.tryParse(t.trim()) ?? 0) * 1000).round();

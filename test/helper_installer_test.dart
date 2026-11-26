@@ -91,8 +91,11 @@ class _Io implements RouterIo {
     writes[path] = bytes;
   }
 
+  final versionFiles = <String, String>{};
+
   @override
   Future<String?> read(String path) async {
+    if (path.endsWith('/version')) return versionFiles[path];
     if (path.endsWith('.op')) {
       if (opError) throw 'wifi';
       return op;
@@ -122,11 +125,13 @@ HelperInstaller _make(
   List<int>? bytes,
   Future<String?> Function()? version,
   Future<List<int>> Function(String)? download,
+  List<HelperInstaller>? needs,
 }) {
   var n = 0;
   return HelperInstaller(
     _FakeApp(),
     io: io,
+    needs: needs,
     package: package ?? 'keystone-history',
     latest: () async => offline ? throw Exception('no net') : rel,
     download: download ?? (url) async => bytes ?? [1, 2, 3],
@@ -529,6 +534,52 @@ void main() {
     expect(io.calls.any((c) => c.contains('/tmp/keystone-history.')), isTrue);
   });
 
+  group('packages that need another one', () {
+    test('installs what it needs first', () async {
+      final io = _Io(failUrl: false);
+      final history = _make(io, package: 'keystone-history');
+      await _make(io, package: 'keystone-alerts', needs: [history]).install();
+      expect(io.writes.keys, [
+        '/tmp/keystone-history.ipk',
+        '/tmp/keystone-alerts.ipk',
+      ]);
+    });
+    test('skips what is already there', () async {
+      final io = _Io(failUrl: false);
+      final history = _make(io, version: () async => '1.0.0');
+      await _make(io, package: 'keystone-alerts', needs: [history]).install();
+      expect(io.writes.keys, ['/tmp/keystone-alerts.ipk']);
+    });
+    test('stops when what it needs fails', () async {
+      final io = _Io(failUrl: false);
+      final history = _make(io, rel: null);
+      await expectLater(
+        _make(io, package: 'keystone-alerts', needs: [history]).install(),
+        _says("isn't published"),
+      );
+      expect(io.writes, isEmpty);
+    });
+    test('alerts and devices need history by default', () {
+      expect(neededPackages('keystone-alerts'), ['keystone-history']);
+      expect(neededPackages('keystone-devices'), ['keystone-history']);
+      expect(neededPackages('keystone-history'), isEmpty);
+    });
+    test('other packages read their version from the router', () async {
+      final io = _Io();
+      final h = HelperInstaller(
+        _FakeApp(),
+        io: io,
+        package: 'keystone-alerts',
+        needs: const [],
+        latest: () async => null,
+      );
+      io.versionFiles['/usr/share/keystone-alerts/version'] = '0.1.0\n';
+      expect(await h.installed(), '0.1.0');
+      io.versionFiles.clear();
+      expect(await h.installed(), isNull);
+    });
+  });
+
   group('releaseFor', () {
     Map<String, dynamic> rel(List<String> names) => {
       'tag_name': 'v0.1.0',
@@ -559,6 +610,68 @@ void main() {
         isNull,
       );
       expect(releaseFor('nope', 'keystone-history'), isNull);
+    });
+  });
+
+  group('newestRelease', () {
+    final releases = [
+      {
+        'tag_name': 'keystone-history-v1.2.0_beta1',
+        'prerelease': true,
+        'assets': [
+          {
+            'browser_download_url':
+                'https://gh/d/keystone-history-1.2.0_beta1.apk',
+          },
+        ],
+      },
+      {
+        'tag_name': 'keystone-alerts-v1.0.0',
+        'assets': [
+          {'browser_download_url': 'https://gh/d/keystone-alerts-1.0.0.apk'},
+        ],
+      },
+      {
+        'tag_name': 'keystone-history-v1.1.0',
+        'assets': [
+          {'browser_download_url': 'https://gh/d/keystone-history-1.1.0.apk'},
+        ],
+      },
+      {
+        'tag_name': 'v0.2.0',
+        'assets': [
+          {'browser_download_url': 'https://gh/d/keystone-history-0.2.0.apk'},
+        ],
+      },
+      {
+        'tag_name': 'keystone-history-v9.0.0',
+        'draft': true,
+        'assets': [
+          {'browser_download_url': 'https://gh/d/keystone-history-9.0.0.apk'},
+        ],
+      },
+    ];
+
+    test('finds a package whose release is not the newest', () {
+      expect(
+        newestRelease(releases, 'keystone-history', stable: true)!.version,
+        '1.1.0',
+      );
+      expect(
+        newestRelease(releases, 'keystone-alerts', stable: true)!.version,
+        '1.0.0',
+      );
+    });
+
+    test('pre-releases only for the experimental channel', () {
+      expect(
+        newestRelease(releases, 'keystone-history')!.version,
+        '1.2.0_beta1',
+      );
+    });
+
+    test('nothing for a package that was never released', () {
+      expect(newestRelease(releases, 'keystone-devices', stable: true), isNull);
     });
   });
 }

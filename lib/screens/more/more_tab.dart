@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/alerts/alerts_screen.dart';
 import 'package:yet_another_luci_app/screens/network/network_screen.dart';
 import 'package:yet_another_luci_app/design/keystone_tokens.dart';
 import 'package:yet_another_luci_app/main.dart';
@@ -129,6 +130,13 @@ class MoreTab extends ConsumerWidget {
               'Lights, health, storage, logs, restart',
               () => open((_) => const RouterScreen()),
             ),
+            if (!reviewer)
+              MoreItem(
+                Icons.notifications_none_rounded,
+                'Alerts',
+                'Outages, new devices, data and signal',
+                () => openAlerts(context, app),
+              ),
             MoreItem(
               Icons.speed_rounded,
               'Speed test',

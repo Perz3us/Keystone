@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yet_another_luci_app/models/rpc_result.dart';
 import 'package:yet_another_luci_app/modules/sqm/controllers/sqm_controller.dart';
+import 'package:yet_another_luci_app/modules/sqm/models/sqm_queue.dart';
 import 'package:yet_another_luci_app/modules/sqm/models/sqm_telemetry.dart';
 import 'package:yet_another_luci_app/modules/sqm/services/sqm_telemetry_service.dart';
 import 'package:yet_another_luci_app/services/interfaces/api_service_interface.dart';
@@ -181,6 +182,125 @@ void main() {
         );
       },
     );
+
+    test('finds the internet link by its default route', () async {
+      final api = _MockLuciApiService(
+        responses: {
+          'rc.list': [
+            0,
+            {
+              'sqm': {'running': false, 'enabled': true},
+            },
+          ],
+          'uci.get': [
+            0,
+            {
+              'values': {
+                'eth1': {
+                  '.type': 'queue',
+                  'interface': 'eth1',
+                  'download': 85000,
+                  'upload': 10000,
+                  'enabled': '0',
+                },
+              },
+            },
+          ],
+          'network.interface.dump': [
+            0,
+            {
+              'interface': [
+                {'interface': 'lan', 'up': true, 'device': 'br-lan'},
+                {
+                  'interface': 'modem',
+                  'up': true,
+                  'l3_device': 'wwan0',
+                  'route': [
+                    {'target': '0.0.0.0', 'mask': 0},
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      );
+      final controller = SqmController(
+        'test-router-wwan',
+        apiServiceOverride: api,
+      );
+      addTearDown(controller.dispose);
+
+      await controller.refresh();
+
+      expect(controller.state.primaryWanInterface, 'wwan0');
+      expect(controller.state.networkInterfaces, ['br-lan', 'wwan0']);
+      expect(
+        sqmTargetInterface(controller.state.queues.single, controller.state),
+        'wwan0',
+      );
+    });
+
+    test('a full-tunnel VPN is not taken for the internet link', () async {
+      final api = _MockLuciApiService(
+        responses: {
+          'rc.list': [0, <String, dynamic>{}],
+          'uci.get': [
+            0,
+            {
+              'values': {
+                'q': {'.type': 'queue', 'interface': 'eth0', 'enabled': '0'},
+              },
+            },
+          ],
+          'network.interface.dump': [
+            0,
+            {
+              'interface': [
+                {
+                  'interface': 'awg',
+                  'proto': 'wireguard',
+                  'l3_device': 'awg',
+                  'route': [
+                    {'target': '0.0.0.0', 'mask': 0},
+                  ],
+                },
+                {
+                  'interface': 'wan',
+                  'proto': 'pppoe',
+                  'device': 'eth0.2',
+                  'l3_device': 'pppoe-wan',
+                  'route': [
+                    {'target': '0.0.0.0', 'mask': 0},
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      );
+      final controller = SqmController(
+        'test-router-vpn',
+        apiServiceOverride: api,
+      );
+      addTearDown(controller.dispose);
+
+      await controller.refresh();
+
+      expect(controller.state.errorMessage, isNull);
+      expect(controller.state.primaryWanInterface, 'pppoe-wan');
+    });
+
+    test('keeps a queue on a link the router has', () {
+      const s = SqmState(
+        primaryWanInterface: 'wwan0',
+        networkInterfaces: ['br-lan', 'wan', 'wwan0'],
+      );
+      expect(
+        sqmTargetInterface(const SqmQueue(name: 'q', interface: 'wan'), s),
+        'wan',
+      );
+      expect(sqmTargetInterface(null, s), 'wwan0');
+    });
 
     test('Inactive service classifies as inactive', () async {
       final api = _MockLuciApiService(

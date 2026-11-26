@@ -1,5 +1,10 @@
 import 'dart:async';
 
+import 'package:yet_another_luci_app/modules/noobwrt/datacap/data_plan_client.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/devices_usage/device_usage_client.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/history/helper_installer.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/noob_rpc.dart';
+import 'package:yet_another_luci_app/screens/home/home_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yet_another_luci_app/main.dart';
@@ -12,6 +17,15 @@ import 'package:yet_another_luci_app/screens/devices/devices_view.dart';
 import 'package:yet_another_luci_app/screens/routers/routers_sheet.dart';
 import 'package:yet_another_luci_app/screens/sign_in/sign_in_screen.dart';
 import 'package:yet_another_luci_app/services/device_discovery.dart';
+
+String? installNote({required bool calendarTotals, int? billingDay}) {
+  if (!calendarTotals) {
+    return 'See the data each device uses, per billing period';
+  }
+  if (billingDay == null || billingDay == 1) return null;
+  return 'Totals follow the calendar month, not your billing day. '
+      'Install Data per device to match your bill.';
+}
 
 List<Client> withBandix(List<Client> clients, Map<String, BandixRate>? rates) {
   if (rates == null || rates.isEmpty) return clients;
@@ -75,6 +89,10 @@ class _AllDevicesState extends ConsumerState<AllDevicesScreen> {
   List<Client>? _aggregated;
 
   Map<String, int>? _month;
+  String? _monthLabel;
+  String? _note;
+  bool _offerInstall = false;
+  int? _billingDay;
 
   @override
   void initState() {
@@ -97,6 +115,29 @@ class _AllDevicesState extends ConsumerState<AllDevicesScreen> {
 
   Future<void> _loadMonth() async {
     final app = ref.read(appStateProvider);
+    final keystone = DeviceUsageClient.of(app);
+    try {
+      final info = await keystone.info();
+      final u = info == null ? null : await keystone.usage();
+      if (!mounted) return;
+      if (u != null) {
+        setState(() {
+          _month = {for (final d in u.byMac.values) d.mac: d.total};
+          _monthLabel = u.start.day == 1
+              ? 'This month'
+              : 'Since ${dayMonth(u.start)}';
+          _offerInstall = false;
+          _note = info!.offload
+              ? 'Offloading is on, so some traffic skips the counters and '
+                    'totals may read low.'
+              : null;
+        });
+        return;
+      }
+      if (info == null && !app.reviewerModeEnabled) {
+        setState(() => _offerInstall = true);
+      }
+    } catch (_) {}
     final r = app.selectedRouter;
     final api = app.apiService;
     if (r == null || api == null || app.sysauth == null) return;
@@ -114,6 +155,25 @@ class _AllDevicesState extends ConsumerState<AllDevicesScreen> {
       }
       setState(() => _month = m);
     } catch (_) {}
+    if (!_offerInstall) return;
+    try {
+      final day = (await DataPlanClient.of(app).load())?.active?.billingDay;
+      if (mounted) setState(() => _billingDay = day);
+    } catch (_) {}
+  }
+
+  Future<void> _install() async {
+    final app = ref.read(appStateProvider);
+    setState(() => _note = 'Installing on the router. This can take a minute.');
+    try {
+      await HelperInstaller(app, package: 'keystone-devices').install();
+      _offerInstall = false;
+      _note = null;
+      await _loadMonth();
+    } catch (e) {
+      _note = e is NoobRpcError ? e.message : "Couldn't reach the router.";
+    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -126,6 +186,9 @@ class _AllDevicesState extends ConsumerState<AllDevicesScreen> {
       ...blocked,
       ...paused,
     });
+    final offer = _offerInstall
+        ? installNote(calendarTotals: _month != null, billingDay: _billingDay)
+        : null;
     return Scaffold(
       backgroundColor: ks.bg,
       appBar: AppBar(
@@ -151,7 +214,12 @@ class _AllDevicesState extends ConsumerState<AllDevicesScreen> {
                   if ((c.rxBytes ?? 0) + (c.txBytes ?? 0) > 0)
                     c.normalizedMac: (c.rxBytes ?? 0) + (c.txBytes ?? 0),
               },
-          usageLabel: _month != null ? 'This month' : 'Since it connected',
+          usageLabel: _month != null
+              ? (_monthLabel ?? 'This month')
+              : 'Since it connected',
+          note: offer ?? _note,
+          noteAction: offer != null ? 'Install' : null,
+          onNote: offer != null ? _install : null,
           startByData: widget.byData,
           loading: app.isClientsLoading,
           onRefresh: _load,

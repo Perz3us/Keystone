@@ -2,6 +2,7 @@
 
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:yet_another_luci_app/utils/internet_link.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +52,9 @@ Uri _buildUrl(String ipAddress, bool useHttps, String path) {
 }
 
 typedef ApiService = RealApiService;
+
+const _wanZoneSh =
+    r'$(. /lib/functions/network.sh; network_find_wan N; Z=$({ fw4 -q network "$N" || fw3 -q network "$N"; } 2>/dev/null); echo "${Z:-wan}")';
 
 class RealApiService implements IApiService {
   final HttpClientManager _httpClientManager = HttpClientManager();
@@ -2377,7 +2381,7 @@ class RealApiService implements IApiService {
   uci set firewall.parental_dns_redir6_\$SEC=redirect
   uci set firewall.parental_dns_redir6_\$SEC.name="parental_dns_redir6_\$SEC"
   uci set firewall.parental_dns_redir6_\$SEC.src='lan'
-  uci set firewall.parental_dns_redir6_\$SEC.dest='wan'
+  uci set firewall.parental_dns_redir6_\$SEC.dest="$_wanZoneSh"
   uci set firewall.parental_dns_redir6_\$SEC.proto='tcp udp'
   uci set firewall.parental_dns_redir6_\$SEC.family='ipv6'
   uci set firewall.parental_dns_redir6_\$SEC.src_dport='53'
@@ -2454,7 +2458,7 @@ else
   uci set firewall.parental_dns_redir_\$SEC=redirect
   uci set firewall.parental_dns_redir_\$SEC.name="parental_dns_redir_\$SEC"
   uci set firewall.parental_dns_redir_\$SEC.src='lan'
-  uci set firewall.parental_dns_redir_\$SEC.dest='wan'
+  uci set firewall.parental_dns_redir_\$SEC.dest="$_wanZoneSh"
   uci set firewall.parental_dns_redir_\$SEC.proto='tcp udp'
   uci set firewall.parental_dns_redir_\$SEC.src_dport='53'
   uci delete firewall.parental_dns_redir_\$SEC.src_mac 2>/dev/null || true
@@ -2467,7 +2471,7 @@ else
   uci set firewall.parental_dot_block_\$SEC=rule
   uci set firewall.parental_dot_block_\$SEC.name="parental_dot_block_\$SEC"
   uci set firewall.parental_dot_block_\$SEC.src='lan'
-  uci set firewall.parental_dot_block_\$SEC.dest='wan'
+  uci set firewall.parental_dot_block_\$SEC.dest="$_wanZoneSh"
   uci set firewall.parental_dot_block_\$SEC.proto='tcp'
   uci set firewall.parental_dot_block_\$SEC.dest_port='853'
   uci delete firewall.parental_dot_block_\$SEC.src_mac 2>/dev/null || true
@@ -2607,7 +2611,7 @@ done
 uci set firewall.parental_sched_\${SEC}_1=rule
 uci set firewall.parental_sched_\${SEC}_1.name="parental_sched_\${SEC}_1"
 uci set firewall.parental_sched_\${SEC}_1.src='lan'
-uci set firewall.parental_sched_\${SEC}_1.dest='wan'
+uci set firewall.parental_sched_\${SEC}_1.dest="$_wanZoneSh"
 uci delete firewall.parental_sched_\${SEC}_1.src_mac 2>/dev/null || true
 for m in $macsStr; do uci add_list firewall.parental_sched_\${SEC}_1.src_mac="\$m"; done
 uci set firewall.parental_sched_\${SEC}_1.start_time='$bFormatted'
@@ -2624,7 +2628,7 @@ uci delete firewall.parental_sched_\${SEC}_2 2>/dev/null || true
 uci set firewall.parental_sched_\${SEC}_1=rule
 uci set firewall.parental_sched_\${SEC}_1.name="parental_sched_\${SEC}_1"
 uci set firewall.parental_sched_\${SEC}_1.src='lan'
-uci set firewall.parental_sched_\${SEC}_1.dest='wan'
+uci set firewall.parental_sched_\${SEC}_1.dest="$_wanZoneSh"
 uci delete firewall.parental_sched_\${SEC}_1.src_mac 2>/dev/null || true
 for m in $macsStr; do uci add_list firewall.parental_sched_\${SEC}_1.src_mac="\$m"; done
 uci set firewall.parental_sched_\${SEC}_1.start_time='$bFormatted'
@@ -2637,7 +2641,7 @@ uci reorder firewall.parental_sched_\${SEC}_1=0 2>/dev/null || true
 uci set firewall.parental_sched_\${SEC}_2=rule
 uci set firewall.parental_sched_\${SEC}_2.name="parental_sched_\${SEC}_2"
 uci set firewall.parental_sched_\${SEC}_2.src='lan'
-uci set firewall.parental_sched_\${SEC}_2.dest='wan'
+uci set firewall.parental_sched_\${SEC}_2.dest="$_wanZoneSh"
 uci delete firewall.parental_sched_\${SEC}_2.src_mac 2>/dev/null || true
 for m in $macsStr; do uci add_list firewall.parental_sched_\${SEC}_2.src_mac="\$m"; done
 uci set firewall.parental_sched_\${SEC}_2.start_time='00:00:00'
@@ -2664,7 +2668,7 @@ uci delete firewall.parental_sched_\${SEC}_2 2>/dev/null || true
 uci set firewall.parental_pause_\$SEC=rule
 uci set firewall.parental_pause_\$SEC.name="parental_pause_\$SEC"
 uci set firewall.parental_pause_\$SEC.src='lan'
-uci set firewall.parental_pause_\$SEC.dest='wan'
+uci set firewall.parental_pause_\$SEC.dest="$_wanZoneSh"
 uci delete firewall.parental_pause_\$SEC.src_mac 2>/dev/null || true
 for m in $macsStr; do uci add_list firewall.parental_pause_\$SEC.src_mac="\$m"; done
 uci set firewall.parental_pause_\$SEC.target='REJECT'
@@ -2688,7 +2692,7 @@ uci delete firewall.parental_pause_\$SEC 2>/dev/null || true
 uci set firewall.parental_dns_redir6_\$SEC=redirect
 uci set firewall.parental_dns_redir6_\$SEC.name="parental_dns_redir6_\$SEC"
 uci set firewall.parental_dns_redir6_\$SEC.src='lan'
-uci set firewall.parental_dns_redir6_\$SEC.dest='wan'
+uci set firewall.parental_dns_redir6_\$SEC.dest="$_wanZoneSh"
 uci set firewall.parental_dns_redir6_\$SEC.proto='tcp udp'
 uci set firewall.parental_dns_redir6_\$SEC.family='ipv6'
 uci set firewall.parental_dns_redir6_\$SEC.src_dport='53'
@@ -2734,7 +2738,7 @@ uci reorder firewall.parental_dns_in6_\$SEC=0 2>/dev/null || true
 uci set firewall.parental_dns_redir_\$SEC=redirect
 uci set firewall.parental_dns_redir_\$SEC.name="parental_dns_redir_\$SEC"
 uci set firewall.parental_dns_redir_\$SEC.src='lan'
-uci set firewall.parental_dns_redir_\$SEC.dest='wan'
+uci set firewall.parental_dns_redir_\$SEC.dest="$_wanZoneSh"
 uci set firewall.parental_dns_redir_\$SEC.proto='tcp udp'
 uci set firewall.parental_dns_redir_\$SEC.src_dport='53'
 uci delete firewall.parental_dns_redir_\$SEC.src_mac 2>/dev/null || true
@@ -2747,7 +2751,7 @@ uci reorder firewall.parental_dns_redir_\$SEC=0 2>/dev/null || true
 uci set firewall.parental_dot_block_\$SEC=rule
 uci set firewall.parental_dot_block_\$SEC.name="parental_dot_block_\$SEC"
 uci set firewall.parental_dot_block_\$SEC.src='lan'
-uci set firewall.parental_dot_block_\$SEC.dest='wan'
+uci set firewall.parental_dot_block_\$SEC.dest="$_wanZoneSh"
 uci set firewall.parental_dot_block_\$SEC.proto='tcp'
 uci set firewall.parental_dot_block_\$SEC.dest_port='853'
 uci delete firewall.parental_dot_block_\$SEC.src_mac 2>/dev/null || true
@@ -4000,7 +4004,10 @@ uci commit dhcp
           'firewall',
           'fwd_guest_wan',
           'forwarding',
-          {'src': 'guest', 'dest': 'wan'},
+          {
+            'src': 'guest',
+            'dest': await _internetZone(ipAddress, sysauth, useHttps),
+          },
           context: mCtx,
         );
       }
@@ -5054,7 +5061,7 @@ exit 0
               'values': {
                 'name': ruleName,
                 'src': '*',
-                'dest': 'wan',
+                'dest': await _internetZone(ipAddress, sysauth, useHttps),
                 'src_mac': [macUpper],
                 'target': 'DROP',
                 'enabled': '1',
@@ -5131,7 +5138,7 @@ if [ -z "\$EXISTS" ]; then
   uci add firewall rule >/dev/null
   uci set firewall.@rule[-1].name="\$RULE_NAME"
   uci set firewall.@rule[-1].src='lan'
-  uci set firewall.@rule[-1].dest='wan'
+  uci set firewall.@rule[-1].dest="$_wanZoneSh"
   uci add_list firewall.@rule[-1].src_mac="\$MAC_U"
   uci set firewall.@rule[-1].target='REJECT'
   uci set firewall.@rule[-1].enabled='1'
@@ -8996,6 +9003,41 @@ rm -f "$leasePath" /tmp/dhcp.leases /var/dhcp.leases /tmp/dnsmasq.leases /var/li
     } catch (e, stack) {
       Logger.exception('toggleGlobalDdns failed', e, stack);
       return false;
+    }
+  }
+
+  Future<String> _internetZone(
+    String ipAddress,
+    String sysauth,
+    bool useHttps,
+  ) async {
+    try {
+      final r = await Future.wait([
+        call(
+          ipAddress,
+          sysauth,
+          useHttps,
+          object: 'uci',
+          method: 'get',
+          params: {'config': 'firewall'},
+        ),
+        call(
+          ipAddress,
+          sysauth,
+          useHttps,
+          object: 'network.interface',
+          method: 'dump',
+        ),
+      ]);
+      Object? body(Object? x) => x is List && x.length > 1 ? x[1] : x;
+      final fw = body(r[0]);
+      final values = fw is Map && fw['values'] is Map
+          ? fw['values'] as Map
+          : const {};
+      final link = internetInterface(dumpInterfaces(body(r[1])));
+      return internetZone(values, link?['interface']?.toString());
+    } catch (_) {
+      return 'wan';
     }
   }
 

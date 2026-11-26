@@ -3,6 +3,8 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:yet_another_luci_app/background/notifier.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/alerts/alerts_screen.dart';
 import 'package:yet_another_luci_app/utils/error_words.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/addons/addons.dart';
 import 'package:yet_another_luci_app/services/app_update.dart';
@@ -50,6 +52,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     AppUpdateChecker.instance.checkDaily();
+    alertTaps.addListener(_openAlerts);
+    if (alertTaps.value > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openAlerts());
+    }
     if (widget.initialTab != null) {
       _selectedIndex = widget.initialTab!.clamp(0, 4);
     }
@@ -78,8 +84,14 @@ class _MainScreenState extends ConsumerState<MainScreen>
     }
   }
 
+  void _openAlerts() {
+    if (!mounted || ref.read(appStateProvider).reviewerModeEnabled) return;
+    openAlerts(context, ref.read(appStateProvider));
+  }
+
   @override
   void dispose() {
+    alertTaps.removeListener(_openAlerts);
     _appState?.removeRouterBackOnlineListener(_handleRouterBackOnline);
     WidgetsBinding.instance.removeObserver(this);
     _appState?.pauseThroughputTimer();

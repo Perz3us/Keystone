@@ -1,18 +1,26 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yet_another_luci_app/background/widget_data.dart';
+import 'package:yet_another_luci_app/screens/home/home_data.dart';
 import 'package:yet_another_luci_app/main.dart';
 import 'package:yet_another_luci_app/models/router_lights.dart';
 import 'package:yet_another_luci_app/modules/core/luci_module_registry.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/apps/apps_module.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/datacap/data_plan.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/datacap/data_plan_client.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/datacap/data_plan_sheet.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/modem/modem_metrics.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/cellular/cellular_module.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/modem/modem_screen.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/modem/signal_overview.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/noob_rpc.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/slow/slow_screen.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/passwall/passwall_module.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/phone/phone_screen.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/tools/tools_module.dart';
@@ -56,6 +64,10 @@ class _HomeTabState extends ConsumerState<HomeTab> with WidgetsBindingObserver {
   String? _signalRouter;
   bool _readingModem = false;
   RouterLights _lights = RouterLights.unlit;
+
+  DataPlans? _plans;
+  String? _plansRouter;
+  DateTime? _plansAt;
 
   Map<String, dynamic>? _dump;
 
@@ -144,7 +156,8 @@ class _HomeTabState extends ConsumerState<HomeTab> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _loadSlow() => Future.wait([_loadLights(), _loadDump()]);
+  Future<void> _loadSlow() =>
+      Future.wait([_loadLights(), _loadDump(), _loadPlans()]);
 
   Future<void> _loadDump() async {
     final app = ref.read(appStateProvider);
@@ -156,6 +169,75 @@ class _HomeTabState extends ConsumerState<HomeTab> with WidgetsBindingObserver {
       final n = await noobCall(app, 'luci-rpc', 'getNetworkDevices');
       if (mounted) setState(() => _netDevices = n);
     } catch (_) {}
+  }
+
+  DateTime? _widgetAt;
+  Map<String, String>? _widgetKeys;
+
+  void _keepWidget(
+    HomeStatus status,
+    SignalOverview? signal,
+    SimPlan? plan, {
+    required bool planKnown,
+  }) {
+    if (ref.read(appStateProvider).reviewerModeEnabled) return;
+    final s = homeSnapshot(
+      routerDisplayName(ref.read(appStateProvider).selectedRouter),
+      status,
+      bars: signal?.bars,
+      plan: plan,
+      signal: signal,
+      now: DateTime.now(),
+    );
+    if (s == null) return;
+    final keys = snapshotKeys(s, signal: signal != null, data: planKnown);
+    final same = mapEquals(
+      {..._widgetKeys ?? {}}..remove('widget.at'),
+      {...keys}..remove('widget.at'),
+    );
+    final at = _widgetAt;
+    if (same &&
+        at != null &&
+        DateTime.now().difference(at) < const Duration(minutes: 1)) {
+      return;
+    }
+    _widgetAt = s.at;
+    _widgetKeys = keys;
+    SharedPreferences.getInstance()
+        .then((p) => saveWidgetKeys(p, keys))
+        .catchError((_) {});
+  }
+
+  Future<void> _loadPlans() async {
+    final app = ref.read(appStateProvider);
+    final id = app.selectedRouter?.id;
+    if (id != _plansRouter) {
+      _plansRouter = id;
+      _plansAt = null;
+      _plans = null;
+    }
+    final at = _plansAt;
+    if (at != null &&
+        DateTime.now().difference(at) < const Duration(minutes: 2)) {
+      return;
+    }
+    _plansAt = DateTime.now();
+    try {
+      final p = await DataPlanClient.of(app).load();
+      if (mounted && id == app.selectedRouter?.id) setState(() => _plans = p);
+    } catch (_) {}
+  }
+
+  Future<void> _editPlan(SimPlan plan) async {
+    final saved = await showDataPlanSheet(
+      context,
+      DataPlanClient.of(ref.read(appStateProvider)),
+      sim: plan.sim,
+      plan: plan,
+    );
+    if (saved == null || !mounted) return;
+    _plansAt = null;
+    await _loadPlans();
   }
 
   Future<void> _loadModem() async {
@@ -267,6 +349,13 @@ class _HomeTabState extends ConsumerState<HomeTab> with WidgetsBindingObserver {
     );
     final modem = _installed('noobwrt_modem');
     final signal = _signalRouter == app.selectedRouter?.id ? _signal : null;
+    final plan = _plansRouter == app.selectedRouter?.id ? _plans?.active : null;
+    _keepWidget(
+      status,
+      signal,
+      plan,
+      planKnown: _plansRouter == app.selectedRouter?.id && _plans != null,
+    );
     final prefs = HomePrefsStore.instance.value;
     final rates = widget.isTabActive && _installed('noobwrt_bandix')
         ? ref.watch(bandixRatesProvider).valueOrNull
@@ -290,6 +379,13 @@ class _HomeTabState extends ConsumerState<HomeTab> with WidgetsBindingObserver {
     ];
 
     final available = <_Shortcut>[
+      if (!app.reviewerModeEnabled)
+        _Shortcut(
+          'why_slow',
+          'Why slow?',
+          Icons.troubleshoot_rounded,
+          () => _open(SlowScreen(checks: () => routerSlowChecks(app))),
+        ),
       if (WifiSetup(
             WirelessOverview.fromDashboardData(
               app.dashboardData,
@@ -391,6 +487,8 @@ class _HomeTabState extends ConsumerState<HomeTab> with WidgetsBindingObserver {
             ? const CellularScreen()
             : const ModemScreen(),
       ),
+      dataPlan: plan,
+      onDataPlan: plan == null ? null : () => _editPlan(plan),
       onDevices: () => app.requestTab(2),
       onRouter: () => _open(const RouterScreen()),
       onAction: modem ? () => _open(const ModemScreen()) : null,
@@ -401,6 +499,7 @@ class _HomeTabState extends ConsumerState<HomeTab> with WidgetsBindingObserver {
       onRefresh: () async {
         await app.fetchDashboardData(force: true);
         _qmodemAt = null;
+        _plansAt = null;
         await Future.wait([_loadModem(), _loadSlow()]);
       },
     );

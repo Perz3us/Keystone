@@ -51,6 +51,17 @@ class MainActivity : FlutterFragmentActivity() {
                         result.error("SETTINGS_ERROR", e.message, null)
                     }
                 }
+                "openNotificationSettings" -> {
+                    try {
+                        startActivity(
+                            android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, packageName)
+                        )
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("SETTINGS_ERROR", e.message, null)
+                    }
+                }
                 "multicastLock" -> {
                     try {
                         val wifi = applicationContext.getSystemService(android.content.Context.WIFI_SERVICE) as android.net.wifi.WifiManager

@@ -10,6 +10,7 @@ import 'package:yet_another_luci_app/models/rpc_result.dart';
 import 'package:yet_another_luci_app/services/interfaces/api_service_interface.dart';
 import 'package:yet_another_luci_app/services/mock_api_service.dart';
 import 'package:yet_another_luci_app/services/operation_queue.dart';
+import 'package:yet_another_luci_app/utils/internet_link.dart';
 import '../models/sqm_queue.dart';
 import '../models/sqm_telemetry.dart';
 import '../services/sqm_telemetry_service.dart';
@@ -300,35 +301,14 @@ class SqmController extends StateNotifier<SqmState> {
         }
       }
 
-      final Set<String> discoveredInterfaces = {'eth0'};
-      String? primaryWan;
-
-      if (netRes is List && netRes.length > 1 && netRes[0] == 0) {
-        final ifacesList = netRes[1]?['interface'];
-        if (ifacesList is List) {
-          for (final item in ifacesList) {
-            if (item is Map) {
-              final ifname =
-                  item['device']?.toString() ??
-                  item['l3_device']?.toString() ??
-                  item['interface']?.toString();
-              if (ifname != null && ifname.isNotEmpty) {
-                discoveredInterfaces.add(ifname);
-              }
-              final protoName = item['interface']?.toString() ?? '';
-              if (protoName == 'wan' || protoName == 'wan6') {
-                primaryWan = ifname;
-              }
-            }
-          }
-        }
-      }
-
-      for (final q in parsedQueues) {
-        if (q.interface.isNotEmpty) {
-          discoveredInterfaces.add(q.interface);
-        }
-      }
+      final links = netRes is List && netRes.length > 1 && netRes[0] == 0
+          ? dumpInterfaces(netRes[1])
+          : const <Object?>[];
+      final discoveredInterfaces = {
+        for (final i in links.whereType<Map>()) ?linkDevice(i),
+      }..remove('lo');
+      final wanLink = internetInterface(links);
+      final primaryWan = wanLink == null ? null : linkDevice(wanLink);
 
       final isInstalled =
           servicePresent || uciConfigFound || parsedQueues.isNotEmpty;
@@ -744,6 +724,15 @@ class SqmController extends StateNotifier<SqmState> {
     _telemetryTimer = null;
     super.dispose();
   }
+}
+
+String sqmTargetInterface(SqmQueue? q, SqmState s) {
+  final i = q?.interface ?? '';
+  if (i.isNotEmpty &&
+      (s.networkInterfaces.isEmpty || s.networkInterfaces.contains(i))) {
+    return i;
+  }
+  return s.primaryWanInterface ?? (i.isEmpty ? 'wan' : i);
 }
 
 final sqmControllerProvider = StateNotifierProvider.autoDispose

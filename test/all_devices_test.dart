@@ -121,4 +121,26 @@ void main() {
     expect(find.text('TV'), findsNothing);
     expect(find.text('Laptop'), findsOneWidget);
   });
+
+  testWidgets('a note with an action above the list', (t) async {
+    var tapped = 0;
+    await t.pumpWidget(
+      MaterialApp(
+        theme: KeystoneTheme.buildLightTheme(),
+        home: Scaffold(
+          body: AllDevicesView(
+            devices: _all,
+            blocked: const {},
+            paused: const {},
+            onOpen: (_) {},
+            note: 'See the data each device uses this month',
+            noteAction: 'Install',
+            onNote: () => tapped++,
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('Install'));
+    expect(tapped, 1);
+  });
 }

@@ -13,6 +13,7 @@ HistoryPoint _p(
   double? ping,
   String? pci,
   String? earfcn,
+  String band = 'B3',
 }) => HistoryPoint(
   t: _t0.add(Duration(minutes: min)),
   rsrp: rsrp,
@@ -20,7 +21,7 @@ HistoryPoint _p(
   ping: ping,
   pci: pci,
   earfcn: earfcn,
-  band: 'B3',
+  band: band,
 );
 
 List<HistoryPoint> _run(int to, {double? rsrp, double? sinr, double? ping}) => [
@@ -121,6 +122,13 @@ void main() {
     });
     test('slowPeriods of empty list', () {
       expect(slowPeriods([]), isEmpty);
+    });
+    test('a tower is labelled by its latest reading', () {
+      final s = towerSummary([
+        _p(0, pci: '1', earfcn: '1', band: 'B3 (18 MHz) @2 MHz'),
+        _p(2, pci: '1', earfcn: '1', band: 'B3 (1800 MHz) @20 MHz'),
+      ]);
+      expect(s.single.band, 'B3 (1800 MHz) @20 MHz');
     });
     test('single point tower has zero time', () {
       final s = towerSummary([_p(0, rsrp: -90, pci: '1', earfcn: '1')]);

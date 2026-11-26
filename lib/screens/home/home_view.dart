@@ -3,8 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:yet_another_luci_app/design/keystone_tokens.dart';
 import 'package:yet_another_luci_app/models/router_lights.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/datacap/data_plan.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/modem/modem_metrics.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/modem/signal_overview.dart';
+import 'package:yet_another_luci_app/screens/home/home_data.dart';
 import 'package:yet_another_luci_app/screens/home/home_flow.dart';
 import 'package:yet_another_luci_app/screens/home/home_prefs.dart';
 import 'package:yet_another_luci_app/screens/home/home_signal.dart';
@@ -46,6 +48,8 @@ class HomeView extends StatelessWidget {
     this.devices = const [],
     this.signal,
     this.onSignal,
+    this.dataPlan,
+    this.onDataPlan,
   });
 
   final String routerName;
@@ -79,6 +83,9 @@ class HomeView extends StatelessWidget {
   final SignalOverview? signal;
   final VoidCallback? onSignal;
 
+  final SimPlan? dataPlan;
+  final VoidCallback? onDataPlan;
+
   @override
   Widget build(BuildContext context) {
     final ks = context.ks;
@@ -94,6 +101,10 @@ class HomeView extends StatelessWidget {
         Text(status.headline, style: KeystoneType.headline(ks.tx)),
         const SizedBox(height: 6),
         Text(status.detail, style: KeystoneType.secondary(ks.mu)),
+        if (prefs.usage && dataPlan != null && !status.unreachable) ...[
+          const SizedBox(height: 6),
+          HomeDataLine(plan: dataPlan!, now: DateTime.now(), onTap: onDataPlan),
+        ],
         const SizedBox(height: 20),
         _picture(ks, big ? null : beside),
         if (status.unreachable)

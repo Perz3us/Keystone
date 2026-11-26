@@ -619,10 +619,15 @@ class SessionController {
 
   int _switchEpoch = 0;
 
-  Future<void> selectRouter(String id, {BuildContext? context}) async {
+  Future<void> selectRouter(
+    String id, {
+    BuildContext? context,
+    bool force = false,
+  }) async {
     if (_routerService == null || _routerService!.routers.isEmpty) return;
 
-    if (_routerService?.selectedRouter?.id == id &&
+    if (!force &&
+        _routerService?.selectedRouter?.id == id &&
         _authService?.isAuthenticated == true &&
         _dashboardController?.dashboardData != null) {
       _setLoadingState(false);

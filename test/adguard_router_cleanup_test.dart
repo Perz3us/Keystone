@@ -120,8 +120,10 @@ void main() {
           equals(extProfile.id),
         );
 
+        fakeStorage['alerts.key.$routerId'] = 'a' * 32;
         await storage.deleteRouter(routerId);
 
+        expect(fakeStorage.containsKey('alerts.key.$routerId'), isFalse);
         expect(
           fakeStorage.containsKey('agh_active_profile_$routerId'),
           isFalse,

@@ -51,11 +51,13 @@ List<TowerUse> towerSummary(List<HistoryPoint> p) {
   final sum = <String, double>{};
   final n = <String, int>{};
   final first = <String, HistoryPoint>{};
+  final band = <String, String>{};
   for (var i = 0; i < p.length; i++) {
     final e = p[i];
     if (e.pci == null || e.earfcn == null) continue;
     final k = '${e.pci}|${e.earfcn}';
     first.putIfAbsent(k, () => e);
+    if (e.band != null) band[k] = e.band!;
     time.putIfAbsent(k, () => Duration.zero);
     if (e.rsrp != null) {
       sum[k] = (sum[k] ?? 0) + e.rsrp!;
@@ -71,7 +73,7 @@ List<TowerUse> towerSummary(List<HistoryPoint> p) {
       TowerUse(
         pci: first[k]!.pci!,
         earfcn: first[k]!.earfcn!,
-        band: first[k]!.band,
+        band: band[k],
         time: time[k]!,
         avgRsrp: n[k] == null ? null : sum[k]! / n[k]!,
       ),

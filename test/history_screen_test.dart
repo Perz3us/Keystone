@@ -71,6 +71,7 @@ Future<void> _pump(
   bool dark = false,
   bool settle = true,
   int maxDays = 7,
+  Future<List<(DateTime, DateTime)>> Function(DateTime, DateTime)? outages,
 }) async {
   t.view.physicalSize = size;
   t.view.devicePixelRatio = 1;
@@ -92,6 +93,7 @@ Future<void> _pump(
         towers: towers,
         now: () => _now,
         maxDays: maxDays,
+        outages: outages,
       ),
     ),
   );
@@ -102,6 +104,30 @@ HistoryChart _chart(WidgetTester t, String key) =>
     t.widget<CustomPaint>(find.byKey(ValueKey(key))).painter! as HistoryChart;
 
 void main() {
+  testWidgets('outages are shaded on the ping chart', (t) async {
+    final down = (
+      _now.subtract(const Duration(hours: 3)),
+      _now.subtract(const Duration(hours: 2)),
+    );
+    DateTime? askedFrom;
+    await _pump(
+      t,
+      (_, _) async => _data(),
+      outages: (f, _) async {
+        askedFrom = f;
+        return [down];
+      },
+    );
+    expect(_chart(t, 'ping-chart').outages, [down]);
+    expect(askedFrom, _now.subtract(const Duration(hours: 24)));
+  });
+
+  testWidgets('no alerts package, no shading, no fuss', (t) async {
+    await _pump(t, (_, _) async => _data(), outages: (_, _) async => throw 'x');
+    expect(_chart(t, 'ping-chart').outages, isEmpty);
+    expect(find.byKey(const ValueKey('ping-chart')), findsOneWidget);
+  });
+
   testWidgets('range picker defaults to 24 h and loads 7 d', (t) async {
     final calls = <(DateTime, DateTime)>[];
     await _pump(t, (f, to) async {
@@ -281,22 +307,22 @@ void main() {
     expect(find.textContaining('PCI 151'), findsWidgets);
   });
 
-  testWidgets('restart note shows when since is inside the range', (t) async {
+  testWidgets('notes when readings start inside the range', (t) async {
     await _pump(
       t,
       (_, _) async => _data(since: _now.subtract(const Duration(hours: 3))),
     );
-    expect(find.textContaining('Since the router restarted at'), findsOne);
+    expect(find.textContaining('No readings before'), findsOne);
   });
 
-  testWidgets('restart note absent when since is null or too old', (t) async {
+  testWidgets('no note when readings cover the range', (t) async {
     await _pump(t, (_, _) async => _data());
-    expect(find.textContaining('Since the router restarted at'), findsNothing);
+    expect(find.textContaining('No readings before'), findsNothing);
     await _pump(
       t,
       (_, _) async => _data(since: _now.subtract(const Duration(days: 2))),
     );
-    expect(find.textContaining('Since the router restarted at'), findsNothing);
+    expect(find.textContaining('No readings before'), findsNothing);
   });
 
   testWidgets('towers list and add best tower', (t) async {

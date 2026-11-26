@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.1.0
+
+- Home-screen widgets in three sizes: Status, Data (used, allowance and days until reset) and Overview (signal and data together)
+- Set a data plan, including unlimited and fair-use plans, and see how much is left and when it resets
+- Alerts for outages, new devices, signal drops and data warnings. Choose which ones notify, which are only logged, and their limits. Keystone catches up on what happened when your phone gets back to the router's Wi-Fi
+- "Why is it slow?" checks the connection and explains the cause in plain words, with a fix where there is one
+- See how much data each device uses
+- Check channels: find the quietest Wi-Fi channel from the networks the router hears nearby
+- Restart Wi-Fi, the internet or the router on a schedule
+- Smooth connection now finds the internet link on 5G/LTE modems and PPPoE, and never picks a VPN by mistake
+- Speed test no longer stops with a garbled message when the router prints a warning
+- Dynamic DNS saves the connection or device you choose and offers the router's real connections, including modems
+- Pause, schedules, parental controls and guest Wi-Fi work when the router's internet zone isn't called "wan"
+- Devices that left no longer show as online or wired
+- Changing the address of the router you're using reconnects straight away
+- The sign-in screen only says "On this Wi-Fi" when it's true
+
 ## 1.0.2
 
 - Updates now download and install from inside the app: Keystone picks the APK for your phone, checks it against the release checksum and hands it to Android to install

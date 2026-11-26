@@ -7,6 +7,7 @@ import 'package:yet_another_luci_app/widgets/keystone/ks_kit.dart';
 
 import '../../../services/app_update.dart';
 import '../cellular/preferred_towers.dart';
+import '../alerts/alerts_client.dart';
 import '../noob_rpc.dart';
 import 'fivegmodem_history.dart';
 import 'helper_history.dart';
@@ -15,12 +16,73 @@ import 'history_data.dart';
 import 'history_merge.dart';
 import 'history_screen.dart';
 
-Future<void> showHelperSheet(BuildContext context, HelperInstaller helper) =>
-    ksSheet<void>(context, (_) => _HelperSheet(helper));
+@immutable
+class AddonText {
+  const AddonText({
+    required this.name,
+    required this.about,
+    required this.removeBody,
+    this.aboutNew,
+    this.retention = false,
+  });
+  final String name, about, removeBody;
+
+  final String? aboutNew;
+  final bool retention;
+}
+
+const signalHistoryText = AddonText(
+  name: 'Signal history',
+  about:
+      'Adds a small background service to the router that keeps signal, line '
+      'ping and data history. About 4 KB. You can remove it here any time.',
+  aboutNew:
+      'Adds a small background service to the router that keeps 7 days of '
+      'signal, line ping and data history. About 4 KB. You can remove it here '
+      'any time.',
+  removeBody: 'History older than the last router restart will be lost.',
+  retention: true,
+);
+
+const alertsText = AddonText(
+  name: 'Alerts',
+  about:
+      'Watches the router for outages, weak signal, new devices and data use, '
+      'and keeps a log for this app.',
+  aboutNew:
+      'Adds a small service to the router that watches for outages, weak '
+      'signal, new devices and data use, and keeps a log for this app. Signal '
+      'history is installed with it if it is not there yet.',
+  removeBody:
+      'Alerts stop. The log stays on the router in case you install it again.',
+);
+
+const devicesText = AddonText(
+  name: 'Data per device',
+  about:
+      'Adds up the data each device uses in your billing period, on the '
+      'router, so it keeps counting while this phone is away.',
+  aboutNew:
+      'Adds a small service to the router that adds up the data each device '
+      'uses in your billing period. Signal history is installed with it if it '
+      'is not there yet.',
+  removeBody:
+      'Counting stops. What was counted stays on the router in case you '
+      'install it again.',
+);
+
+Future<void> showHelperSheet(
+  BuildContext context,
+  HelperInstaller helper, {
+  AddonText text = signalHistoryText,
+  List<(String, HelperInstaller)> dependents = const [],
+}) => ksSheet<void>(context, (_) => _HelperSheet(helper, text, dependents));
 
 class _HelperSheet extends StatefulWidget {
-  const _HelperSheet(this.helper);
+  const _HelperSheet(this.helper, this.text, this.dependents);
   final HelperInstaller helper;
+  final AddonText text;
+  final List<(String, HelperInstaller)> dependents;
 
   @override
   State<_HelperSheet> createState() => _HelperSheetState();
@@ -103,7 +165,7 @@ class _HelperSheetState extends State<_HelperSheet> {
         stable = await h.stableRelease();
       } catch (_) {}
     }
-    final info = have == null ? null : await h.info();
+    final info = have == null || !widget.text.retention ? null : await h.info();
     final keep = info?['keep_days'], max = info?['max_days'];
     if (!mounted) return;
     setState(() {
@@ -133,10 +195,11 @@ class _HelperSheetState extends State<_HelperSheet> {
     } catch (e) {
       error = _words(e);
     }
+    final name = widget.text.name;
     final done = switch (op) {
-      'remove' => 'Signal history removed.',
-      'stable' => 'Signal history is back on the stable version.',
-      _ => 'Signal history installed.',
+      'remove' => '$name removed.',
+      'stable' => '$name is back on the stable version.',
+      _ => '$name installed.',
     };
     if (error == null || !mounted) {
       say.showSnackBar(SnackBar(content: Text(error ?? done)));
@@ -150,10 +213,26 @@ class _HelperSheetState extends State<_HelperSheet> {
   }
 
   Future<void> _remove() async {
+    final using = <String>[];
+    for (final (name, d) in widget.dependents) {
+      try {
+        if (await d.installed() != null) using.add(name);
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    if (using.isNotEmpty) {
+      final it = using.length == 1 ? 'It needs' : 'They need';
+      setState(
+        () => _error =
+            'Remove ${using.join(' and ')} first. $it '
+            '${widget.text.name.toLowerCase()}.',
+      );
+      return;
+    }
     final ok = await ksConfirm(
       context,
-      title: 'Remove signal history?',
-      body: 'History older than the last router restart will be lost.',
+      title: 'Remove ${widget.text.name.toLowerCase()}?',
+      body: widget.text.removeBody,
       action: 'Remove',
       danger: true,
     );
@@ -240,13 +319,12 @@ class _HelperSheetState extends State<_HelperSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Signal history', style: KeystoneType.sheetTitle(ks.tx)),
+        Text(widget.text.name, style: KeystoneType.sheetTitle(ks.tx)),
         const SizedBox(height: 8),
         Text(
-          'Adds a small background service to the router that keeps '
-          '${_keep == null ? '7 days of ' : ''}'
-          'signal, line ping and data history. About 4 KB. You can remove '
-          'it here any time.',
+          _have == null
+              ? widget.text.aboutNew ?? widget.text.about
+              : widget.text.about,
           style: KeystoneType.body(ks.tx2),
         ),
         const SizedBox(height: 16),
@@ -305,7 +383,7 @@ class _HelperSheetState extends State<_HelperSheet> {
       ] else if (have == null) ...[
         if (rel == null) ...[
           Text(
-            "Signal history isn't published yet.",
+            "${widget.text.name} isn't published yet.",
             style: KeystoneType.body(ks.tx2),
           ),
           const SizedBox(height: 12),
@@ -392,6 +470,7 @@ class _HistoryRowState extends State<HistoryRow> {
           towers: PreferredTowers(app),
           helper: helper,
           maxDays: days,
+          outages: (from, to) => alertOutages(AlertsClient.of(app), from, to),
         ),
       ),
     );

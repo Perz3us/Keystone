@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yet_another_luci_app/background/alerts_store.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:yet_another_luci_app/models/router.dart';
@@ -329,6 +331,12 @@ class SecureStorageService {
       final updated = routers.where((r) => r.id != id).toList();
       await saveRouters(updated);
       await deleteAdGuardCredentials(id);
+      await deleteValue(alertsKeyName(id));
+      try {
+        await AlertsStore(await SharedPreferences.getInstance()).forget(id);
+      } catch (e) {
+        Logger.info('Could not clear alerts for $id: $e');
+      }
       await clearActiveAdGuardProfileId(id);
       final profiles = await getAdGuardProfiles();
       final keptProfiles = profiles.where((p) => p.routerId != id).toList();

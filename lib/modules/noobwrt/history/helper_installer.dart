@@ -86,10 +86,15 @@ HelperRelease? releaseFor(Object? json, String package) {
   return HelperRelease(version: version, ipkUrl: ipk, apkUrl: apk);
 }
 
-HelperRelease? newestRelease(Object? json, String package) {
+HelperRelease? newestRelease(
+  Object? json,
+  String package, {
+  bool stable = false,
+}) {
   HelperRelease? best;
   for (final r in json is List ? json : const []) {
     if (r is Map && r['draft'] == true) continue;
+    if (stable && r is Map && r['prerelease'] == true) continue;
     final rel = releaseFor(r, package);
     if (rel != null &&
         (best == null || isNewerVersion(rel.version, best.version))) {
@@ -106,8 +111,7 @@ Future<HelperRelease?> _fetchRelease(
   final res = await http
       .get(
         Uri.parse(
-          'https://api.github.com/repos/Perz3us/keystone-packages/releases'
-          '${experimental ? '?per_page=30' : '/latest'}',
+          'https://api.github.com/repos/Perz3us/keystone-packages/releases?per_page=100',
         ),
         headers: {'Accept': 'application/vnd.github+json'},
       )
@@ -117,9 +121,7 @@ Future<HelperRelease?> _fetchRelease(
     throw NoobRpcError('GitHub answered ${res.statusCode}');
   }
   final json = jsonDecode(res.body);
-  return experimental
-      ? newestRelease(json, package)
-      : releaseFor(json, package);
+  return newestRelease(json, package, stable: !experimental);
 }
 
 Future<List<int>> _fetchBytes(String url) async {
@@ -191,10 +193,16 @@ String _tail(String log) {
   return lines.skip(lines.length > 4 ? lines.length - 4 : 0).join('\n');
 }
 
+List<String> neededPackages(String package) => switch (package) {
+  'keystone-alerts' || 'keystone-devices' => const ['keystone-history'],
+  _ => const [],
+};
+
 class HelperInstaller {
   HelperInstaller(
     AppState app, {
     this.package = 'keystone-history',
+    List<HelperInstaller>? needs,
     RouterIo? io,
     Future<HelperRelease?> Function()? latest,
     Future<HelperRelease?> Function()? stable,
@@ -204,18 +212,31 @@ class HelperInstaller {
     Future<void> Function(int days)? setKeep,
     Future<void> Function(Duration)? sleep,
   }) : _io = io ?? _UbusIo(app),
+       _needs =
+           needs ??
+           [
+             for (final p in neededPackages(package))
+               HelperInstaller(app, package: p, io: io, sleep: sleep),
+           ],
        _latest =
            latest ??
            (() async =>
                _fetchRelease(package, experimental: await loadExperimental())),
        _stable = stable ?? (() => _fetchRelease(package, experimental: false)),
        _download = download ?? _fetchBytes,
-       _version = version ?? (() => helperVersion(app)),
+       _version =
+           version ??
+           (package == 'keystone-history'
+               ? () => helperVersion(app)
+               : () async => (await (io ?? _UbusIo(app)).read(
+                   '/usr/share/$package/version',
+                 ))?.trim()),
        _info = info ?? (() => helperInfo(app)),
        _setKeep = setKeep ?? ((d) => setKeepDays(app, d)),
        _sleep = sleep ?? Future.delayed;
 
   final String package;
+  final List<HelperInstaller> _needs;
   final RouterIo _io;
   final Future<HelperRelease?> Function() _latest;
   final Future<HelperRelease?> Function() _stable;
@@ -340,6 +361,9 @@ class HelperInstaller {
   }
 
   Future<void> install() async {
+    for (final n in _needs) {
+      await n.install();
+    }
     final prior = await _resume('install');
     if (prior != null) {
       if (prior.$1 != 0) throw NoobRpcError(_fail(prior.$2));

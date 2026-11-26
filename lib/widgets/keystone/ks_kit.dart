@@ -108,11 +108,13 @@ class KsRow extends StatelessWidget {
     this.onTap,
     this.danger = false,
     this.chevron,
+    this.subtitleLines,
   });
 
   final String title;
   final String? subtitle;
   final Color? subtitleColor;
+  final int? subtitleLines;
   final Widget? leading;
   final Widget? trailing;
   final VoidCallback? onTap;
@@ -146,6 +148,10 @@ class KsRow extends StatelessWidget {
                   if (subtitle != null && subtitle!.isNotEmpty)
                     Text(
                       subtitle!,
+                      maxLines: subtitleLines,
+                      overflow: subtitleLines == null
+                          ? null
+                          : TextOverflow.ellipsis,
                       style: KeystoneType.caption(subtitleColor ?? ks.mu),
                     ),
                 ],

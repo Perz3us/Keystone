@@ -21,14 +21,34 @@ class Addon {
   final Future<void> Function(BuildContext, HelperInstaller) open;
 }
 
-List<Addon> addonsFor(AppState app) => [
-  Addon(
-    name: 'Signal history',
-    about: 'Signal, line ping and data over time',
-    helper: HelperInstaller(app),
-    open: showHelperSheet,
-  ),
-];
+List<Addon> addonsFor(AppState app) {
+  final alerts = HelperInstaller(app, package: 'keystone-alerts');
+  final devices = HelperInstaller(app, package: 'keystone-devices');
+  return [
+    Addon(
+      name: signalHistoryText.name,
+      about: 'Signal, line ping and data over time',
+      helper: HelperInstaller(app),
+      open: (c, h) => showHelperSheet(
+        c,
+        h,
+        dependents: [(alertsText.name, alerts), (devicesText.name, devices)],
+      ),
+    ),
+    Addon(
+      name: alertsText.name,
+      about: 'Outages, weak signal, new devices and data use',
+      helper: alerts,
+      open: (c, h) => showHelperSheet(c, h, text: alertsText),
+    ),
+    Addon(
+      name: devicesText.name,
+      about: 'Data each device uses per billing period',
+      helper: devices,
+      open: (c, h) => showHelperSheet(c, h, text: devicesText),
+    ),
+  ];
+}
 
 @immutable
 class AddonStatus {

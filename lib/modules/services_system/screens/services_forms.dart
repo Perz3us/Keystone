@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:yet_another_luci_app/design/keystone_tokens.dart';
 import 'package:yet_another_luci_app/widgets/keystone/ks_kit.dart';
 import 'package:yet_another_luci_app/l10n/app_localizations.dart';
+import 'package:yet_another_luci_app/utils/internet_link.dart';
 import '../models/ddns_info.dart';
 
 class CronPreset {
@@ -231,12 +232,14 @@ class CronValidator {
 
 class DdnsEditDialog extends StatefulWidget {
   final DdnsInstance? existingInstance;
+  final List<Object?> links;
   final Future<bool> Function(DdnsInstance instance) onSave;
   final Future<DdnsValidationResult> Function(DdnsInstance instance) onTest;
 
   const DdnsEditDialog({
     super.key,
     this.existingInstance,
+    this.links = const [],
     required this.onSave,
     required this.onTest,
   });
@@ -293,7 +296,11 @@ class DdnsEditDialogState extends State<DdnsEditDialog> {
       text: (inst?.forceInterval ?? 24).toString(),
     );
 
-    _interface = inst?.interface ?? 'wan';
+    final names = _links.map((l) => '${l['interface']}').toSet();
+    final saved = inst?.interface;
+    _interface = saved != null && (names.isEmpty || names.contains(saved))
+        ? saved
+        : internetInterface(_links)?['interface']?.toString() ?? saved ?? 'wan';
     _ipSource = inst?.ipSource ?? 'web';
     _checkUnit = inst?.checkUnit ?? 'minutes';
     _forceUnit = inst?.forceUnit ?? 'hours';
@@ -334,6 +341,20 @@ class DdnsEditDialogState extends State<DdnsEditDialog> {
     super.dispose();
   }
 
+  Iterable<Map> get _links => widget.links.whereType<Map>().where(
+    (l) => l['interface'] != null && l['interface'] != 'loopback',
+  );
+
+  String _linkLabel(String name) {
+    if (name == internetInterface(_links)?['interface']) return 'Internet';
+    return switch (name) {
+      'wan' => 'Internet',
+      'wan6' => 'Internet (IPv6)',
+      'lan' => 'Home network',
+      _ => name,
+    };
+  }
+
   DdnsProviderPreset get _currentPreset => kDdnsProviderPresets.firstWhere(
     (p) => p.serviceName == _selectedServiceName,
     orElse: () => kDdnsProviderPresets.last,
@@ -350,6 +371,16 @@ class DdnsEditDialogState extends State<DdnsEditDialog> {
       password: _passwordController.text.trim(),
       interface: _interface,
       ipSource: _ipSource,
+      ipNetwork: _ipSource == 'network'
+          ? _interface
+          : widget.existingInstance?.ipNetwork ?? _interface,
+      ipInterface:
+          _links
+              .where((l) => l['interface'] == _interface)
+              .map(linkDevice)
+              .firstOrNull ??
+          widget.existingInstance?.ipInterface ??
+          '',
       ipUrl: _ipUrlController.text.trim(),
       updateUrl: _updateUrlController.text.trim(),
       useHttps: _useHttps,
@@ -509,11 +540,13 @@ class DdnsEditDialogState extends State<DdnsEditDialog> {
             label: 'Connection',
             value: _interface,
             options: [
-              ('wan', 'Internet'),
-              ('wan6', 'Internet (IPv6)'),
-              ('lan', 'Home network'),
-              if (!{'wan', 'wan6', 'lan'}.contains(_interface))
-                (_interface, _interface),
+              for (final n in {
+                ...(_links.isEmpty
+                    ? const ['wan', 'wan6', 'lan']
+                    : _links.map((l) => '${l['interface']}')),
+                _interface,
+              })
+                (n, _linkLabel(n)),
             ],
             onChanged: (v) => setState(() => _interface = v),
           ),

@@ -49,9 +49,12 @@ Future<Map<String, dynamic>> noobCall(
       params: params,
     );
   } on Exception catch (e) {
-    if ('$e'.toLowerCase().contains('access denied')) {
+    final text = '$e'.toLowerCase();
+    if (text.contains('access denied')) {
       throw NoobRpcError.refused;
     }
+    if (text.contains('object not found')) throw NoobRpcError(_ubusErrors[4]!);
+    if (text.contains('method not found')) throw NoobRpcError(_ubusErrors[3]!);
     rethrow;
   }
   if (res is List && res.isNotEmpty) {

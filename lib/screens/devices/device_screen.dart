@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:yet_another_luci_app/modules/noobwrt/devices_usage/device_usage_client.dart';
+import 'package:yet_another_luci_app/screens/home/home_data.dart';
+import 'package:yet_another_luci_app/screens/stats/wan_usage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yet_another_luci_app/design/keystone_tokens.dart';
@@ -35,6 +38,7 @@ class _DeviceScreenState extends ConsumerState<DeviceScreen> {
   ControlState _pause = ControlState.idle;
   ControlState _limit = ControlState.idle;
   bool _pauseTarget = false;
+  List<(DateTime, int)> _periods = const [];
 
   Future<void> _apply(
     Future<bool> Function() send,
@@ -52,6 +56,12 @@ class _DeviceScreenState extends ConsumerState<DeviceScreen> {
   @override
   void initState() {
     super.initState();
+    DeviceUsageClient.of(ref.read(appStateProvider))
+        .history(widget.mac)
+        .then((h) {
+          if (mounted) setState(() => _periods = h);
+        })
+        .catchError((_) {});
     _sampler = Timer.periodic(const Duration(seconds: 2), (_) {
       final c = _client();
       if (c == null || !mounted) return;
@@ -213,6 +223,15 @@ class _DeviceScreenState extends ConsumerState<DeviceScreen> {
         ('Connected through', c.apName!),
       if (c.signalDbm case final d?) ('Signal', '$d dBm'),
       if (c.connectedTime case final t? when t > 0) ('Connected for', _span(t)),
+      for (final (i, (start, bytes)) in _periods.indexed)
+        (
+          i == 0
+              ? (start.day == 1
+                    ? 'Data this month'
+                    : 'Data since ${dayMonth(start)}')
+              : 'From ${dayMonth(start)}',
+          sizeWords(bytes),
+        ),
       if (c.rxBytes != null || c.txBytes != null)
         ('Data', '${_size(c.rxBytes ?? 0)} down · ${_size(c.txBytes ?? 0)} up'),
       (

@@ -124,6 +124,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   _Phase _phase = _Phase.ready;
   String? _error;
   String? _ip;
+  String? _gateway;
   RouterLights _lights = RouterLights.unlit;
   int _shown = 0;
   int _attempt = 0;
@@ -135,11 +136,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialIp == null && _router == null) {
-      _backend.detectGatewayIp().then((ip) {
-        if (mounted && ip != null) setState(() => _ip = ip);
+    _backend.detectGatewayIp().then((ip) {
+      if (!mounted || ip == null) return;
+      setState(() {
+        _gateway = ip;
+        if (widget.initialIp == null && _router == null) _ip = ip;
       });
-    }
+    });
     if (widget.autoConnect) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _connect());
     }
@@ -344,28 +347,31 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                               ),
                             ),
                             const SizedBox(height: 26),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 7,
-                                  height: 7,
-                                  decoration: BoxDecoration(
-                                    color: ks.ok,
-                                    shape: BoxShape.circle,
+                            if (_error != null || _gateway == _address)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: BoxDecoration(
+                                      color: _error == null ? ks.ok : ks.bad,
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    'On this Wi-Fi',
-                                    style: KeystoneType.secondary(
-                                      ks.mu,
-                                    ).copyWith(fontWeight: FontWeight.w500),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      _error == null
+                                          ? 'On this Wi-Fi'
+                                          : "Can't reach it",
+                                      style: KeystoneType.secondary(
+                                        ks.mu,
+                                      ).copyWith(fontWeight: FontWeight.w500),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
                             const SizedBox(height: 10),
                             Text(
                               routerDisplayName(_router),

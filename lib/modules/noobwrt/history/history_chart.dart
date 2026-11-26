@@ -53,6 +53,8 @@ class HistoryChart extends CustomPainter {
     required this.labelStyle,
     this.bands = const [],
     this.slow = const [],
+    this.outages = const [],
+    this.outageColor,
     this.ticks = false,
     this.top,
     this.bottom,
@@ -64,6 +66,8 @@ class HistoryChart extends CustomPainter {
   final HistoryLine line;
   final List<HistoryBand> bands;
   final List<(DateTime, DateTime)> slow;
+  final List<(DateTime, DateTime)> outages;
+  final Color? outageColor;
   final Color slowColor, grid;
   final TextStyle labelStyle;
   final bool ticks;
@@ -113,11 +117,16 @@ class HistoryChart extends CustomPainter {
       }
       tp.dispose();
     }
-    final shade = Paint()..color = slowColor.withValues(alpha: .16);
-    for (final (a, b) in slow) {
-      final l = x(a, w), r = x(b, w);
-      canvas.drawRect(Rect.fromLTRB(l, 0, r < l + 2 ? l + 2 : r, h), shade);
+    void spans(List<(DateTime, DateTime)> s, Color c) {
+      final shade = Paint()..color = c.withValues(alpha: .16);
+      for (final (a, b) in s) {
+        final l = x(a, w), r = x(b, w);
+        canvas.drawRect(Rect.fromLTRB(l, 0, r < l + 2 ? l + 2 : r, h), shade);
+      }
     }
+
+    spans(slow, slowColor);
+    spans(outages, outageColor ?? slowColor);
     final rule = Paint()
       ..color = grid
       ..strokeWidth = 1;
@@ -172,6 +181,7 @@ class HistoryChart extends CustomPainter {
   bool shouldRepaint(HistoryChart o) =>
       o.points != points ||
       o.slow != slow ||
+      o.outages != outages ||
       o.pick != pick ||
       o.from != from ||
       o.grid != grid ||

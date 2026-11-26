@@ -5,6 +5,7 @@ import 'package:yet_another_luci_app/widgets/keystone/ks_kit.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yet_another_luci_app/main.dart';
 import 'package:yet_another_luci_app/state/app_state.dart';
+import 'package:yet_another_luci_app/utils/internet_link.dart';
 
 import '../../core/luci_module.dart';
 import '../noob_rpc.dart';
@@ -53,6 +54,13 @@ class _ToolsScreenState extends ConsumerState<ToolsScreen> {
   bool _loading = true;
 
   AppState get _app => ref.read(appStateProvider);
+
+  String get _lanDevice {
+    final lan = dumpInterfaces(
+      _app.dashboardData?['interfaceDump'],
+    ).whereType<Map>().where((i) => i['interface'] == 'lan').firstOrNull;
+    return (lan == null ? null : linkDevice(lan)) ?? 'br-lan';
+  }
 
   @override
   void initState() {
@@ -186,7 +194,7 @@ class _ToolsScreenState extends ConsumerState<ToolsScreen> {
               onPressed: () => _do(
                 () => noobCall(_app, 'luci.wol', 'exec', {
                   'name': '/usr/bin/etherwake',
-                  'args': ['-D', '-i', 'br-lan', l['macaddr'].toString()],
+                  'args': ['-D', '-i', _lanDevice, l['macaddr'].toString()],
                 }),
                 'Wake-up sent',
               ),

@@ -3,6 +3,7 @@
 import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yet_another_luci_app/models/router.dart';
+import 'package:yet_another_luci_app/modules/noobwrt/datacap/data_plan_client.dart';
 import 'package:yet_another_luci_app/modules/noobwrt/noob_rpc.dart';
 import 'package:yet_another_luci_app/services/interfaces/api_service_interface.dart';
 import 'package:yet_another_luci_app/state/app_state.dart';
@@ -20,7 +21,11 @@ class _Api extends Fake implements IApiService {
     required String method,
     Map<String, dynamic>? params,
     BuildContext? context,
-  }) async => reply;
+  }) async {
+    final r = reply;
+    if (r is Exception) throw r;
+    return r;
+  }
 }
 
 class _App extends Fake implements AppState {
@@ -76,5 +81,30 @@ void main() {
       'read',
     );
     expect(r, {'a': 1});
+  });
+
+  test('a package that is not installed reads as missing', () async {
+    Future<Object> fail(String message) async {
+      try {
+        await noobCall(
+          _App(_Api(Exception('RPC error: $message'))),
+          'keystone.alerts',
+          'info',
+        );
+      } catch (e) {
+        return e;
+      }
+      return 'no error';
+    }
+
+    final missing = await fail('Object not found');
+    expect(missing, isA<NoobRpcError>());
+    expect((missing as NoobRpcError).message, 'Not found');
+    expect(keystoneMissing(missing), isTrue);
+    expect(
+      ((await fail('Method not found')) as NoobRpcError).message,
+      'Method not found',
+    );
+    expect(await fail('Timeout'), isNot(isA<NoobRpcError>()));
   });
 }

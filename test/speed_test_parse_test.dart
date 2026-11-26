@@ -58,8 +58,26 @@ void main() {
     );
     expect(e.phase, SpeedPhase.failed);
     expect(e.error, 'Cannot open socket');
-    final j = SpeedTestProgress.parse('sh: ookla-speedtest: not found\n');
+    final j = SpeedTestProgress.parse(
+      '',
+      errors: 'sh: ookla-speedtest: not found\n',
+    );
     expect(j.phase, SpeedPhase.failed);
+    expect(j.error, 'sh: ookla-speedtest: not found');
+    final l = SpeedTestProgress.parse(
+      '$_start\n',
+      errors: '{"type":"log","level":"error","message":"Cannot open socket"}\n',
+    );
+    expect(l.error, 'Cannot open socket');
+  });
+
+  test('a broken line or a warning does not stop the test', () {
+    final p = SpeedTestProgress.parse(
+      '$_start\nation":"Colombo","country":"Sri Lanka"}}\n$_ping\n$_down\n',
+      errors: '[warning] Could not write config\n',
+    );
+    expect(p.phase, SpeedPhase.download);
+    expect(p.error, isNull);
   });
 
   test('a half-written last line is ignored', () {

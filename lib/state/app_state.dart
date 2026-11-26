@@ -672,7 +672,11 @@ class AppState extends ChangeNotifier {
 
   Future<void> removeRouter(String id) => _sessionController!.removeRouter(id);
 
-  Future<void> selectRouter(String id, {BuildContext? context}) async {
+  Future<void> selectRouter(
+    String id, {
+    BuildContext? context,
+    bool force = false,
+  }) async {
     _customGuestSections.clear();
     _excludedGuestSections.clear();
     ParentalControlsController.instance.reset();
@@ -680,7 +684,7 @@ class AppState extends ChangeNotifier {
     _networkActionsController?.resetState();
     _throughputController?.cancelAndClear();
     invalidateStaticLeasesCache();
-    await _sessionController!.selectRouter(id, context: context);
+    await _sessionController!.selectRouter(id, context: context, force: force);
     await loadSpeedLimitsForRouter(id);
   }
 
@@ -4040,22 +4044,24 @@ class AppState extends ChangeNotifier {
     final wirelessStations = rawStations is Map
         ? Map<String, dynamic>.from(rawStations)
         : const <String, dynamic>{};
-    final wirelessMacs = <String>{
-      ...(_clientController?.knownWirelessMacs.keys ?? {}),
-    };
+    final associated = <String>{};
     wirelessStations.forEach((iface, list) {
       if (list is List) {
         for (final item in list) {
           if (item is Map && item['mac'] != null) {
-            wirelessMacs.add(
+            associated.add(
               item['mac'].toString().toUpperCase().replaceAll('-', ':'),
             );
           } else if (item is String) {
-            wirelessMacs.add(item.toUpperCase().replaceAll('-', ':'));
+            associated.add(item.toUpperCase().replaceAll('-', ':'));
           }
         }
       }
     });
+    final wirelessMacs = <String>{
+      ...(_clientController?.knownWirelessMacs.keys ?? {}),
+      ...associated,
+    };
 
     if (rawLeases is List) {
       for (final l in rawLeases) {
@@ -4074,7 +4080,7 @@ class AppState extends ChangeNotifier {
                   : (c.connectionType == ConnectionType.unknown
                         ? ConnectionType.wired
                         : c.connectionType),
-              isConnected: true,
+              isConnected: associated.contains(normMac),
               staticLeaseName: staticName,
               isStaticLease: isStatic,
             ),
@@ -4103,7 +4109,7 @@ class AppState extends ChangeNotifier {
             ipAddress: ip,
             macAddress: normMac,
             hostname: hintName,
-            isConnected: isWireless,
+            isConnected: associated.contains(normMac),
             connectionType: isWireless
                 ? ConnectionType.wireless
                 : ConnectionType.unknown,
@@ -4388,6 +4394,27 @@ String normalizeMac(String mac) => mac
     .split(':')
     .map((b) => b.length == 1 ? '0$b' : b)
     .join(':');
+
+Set<String> recentFdbMacs(String out, {int maxIdle = 60}) {
+  final mac = RegExp(r'([0-9a-fA-F]{2}(?::[0-9a-fA-F]{2}){5})');
+  final used = RegExp(r'used (\d+)/');
+  final macs = <String>{};
+  for (final line in out.split('\n')) {
+    final lower = line.toLowerCase();
+    if (lower.contains('self') || lower.contains('permanent')) continue;
+    final m = mac.firstMatch(line);
+    if (m == null) continue;
+    final parts = line.trim().split(RegExp(r'\s+'));
+    final brctl = parts.length == 4 && (parts[2] == 'yes' || parts[2] == 'no');
+    if (brctl && parts[2] == 'yes') continue;
+    final idle =
+        int.tryParse(used.firstMatch(line)?.group(1) ?? '') ??
+        (brctl ? double.tryParse(parts[3])?.floor() : null);
+    if (idle != null && idle > maxIdle) continue;
+    macs.add(normalizeMac(m.group(0)!));
+  }
+  return macs;
+}
 
 const Duration kNeighborProbeInterval = Duration(seconds: 30);
 
